@@ -1,0 +1,26 @@
+# ntp servers
+${ntp_servers}
+
+# Record the rate at which the system clock gains/losses time.
+driftfile /var/lib/chrony/drift
+
+# Allow the system clock to be stepped in the first three updates
+# if its offset is larger than 1 second.
+makestep 1.0 3
+
+# Enable kernel synchronization of the real-time clock (RTC).
+rtcsync
+
+# Allow NTP client access from local network.
+allow 10.0.0.0/8
+
+# Ignore leap second; ajdust by slewing
+leapsecmode slew
+maxslewrate 1000
+smoothtime 400 0.001 leaponly
+
+# mlockall
+lock_all
+
+# set highest scheduling priority
+sched_priority 99

@@ -1,0 +1,22 @@
+#!/bin/sh -ex
+
+IMAGE=$1
+shift
+
+NBD=/dev/nbd0
+
+modprobe nbd
+qemu-nbd -c $NBD $IMAGE
+trap "qemu-nbd -d $NBD" INT QUIT TERM 0
+
+# resize part1
+partprobe /dev/nbd0 2>/dev/null
+echo "d\n1\nn\n\n\n\n\nw\ny\ny\n" | gdisk /dev/sda >/dev/null
+echo "d\n1\nn\n\n\n\n\nw\ny\n" | gdisk /dev/sda >/dev/null
+
+# copy files
+mount ${NBD}p1 /mnt
+mkdir /mnt/extras
+cp -a "$@" /mnt/extras
+sync
+umount /mnt

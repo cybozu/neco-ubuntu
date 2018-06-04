@@ -1,0 +1,5 @@
+#!/bin/sh -e
+
+sleep 1
+uuid=$(rkt list --no-legend | awk '{if ($4 == "running" && $2 == "chrony") print $1}')
+exec rkt enter --app=chrony $uuid chronyc waitsync 600 0.1 0.0 1

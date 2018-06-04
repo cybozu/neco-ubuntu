@@ -1,0 +1,29 @@
+[Unit]
+Description=Sabakan container on rkt
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/usr/local/etc/sabakan.yml
+Conflicts=sabakan-local.service
+
+[Service]
+Slice=machine.slice
+Type=simple
+KillMode=mixed
+Restart=on-failure
+RestartForceExitStatus=SIGPIPE
+ExecStart=/usr/bin/rkt run \
+  --pull-policy never \
+  --volume conf,kind=host,source=/usr/local/etc/sabakan.yml,readOnly=true \
+  --mount volume=conf,target=/usr/local/etc/sabakan.yml \
+  --volume data,kind=host,source=/var/lib/sabakan \
+  --mount volume=data,target=/var/lib/sabakan \
+  --net=host \
+  quay.io/cybozu/sabakan:0 \
+    --name sabakan \
+    --readonly-rootfs=true \
+    --caps-retain=CAP_NET_BIND_SERVICE \
+  -- \
+    --config-file=/usr/local/etc/sabakan.yml
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,61 @@
+log stderr all;
+protocol device {
+    scan time 60;
+}
+protocol direct singles {
+    ipv4;
+    interface "node0", "bastion";
+}
+protocol bfd {
+    interface "*" {
+       min rx interval 100 ms;
+       min tx interval 100 ms;
+    };
+}
+protocol kernel {
+    merge paths;
+    ipv4 {
+        export filter {
+            if source = RTS_DEVICE then reject;
+            accept;
+        };
+    };
+}
+
+ipv4 table dummytab;
+protocol static dummystatic {
+    ipv4 { table dummytab; };
+    route 0.0.0.0/0 via "lo";
+}
+template bgp tor {
+    local as $ASN;
+    direct;
+    bfd;
+
+    ipv4 {
+        # Accept routes regardless of its NEXT_HOP.
+        igp table dummytab;
+        gateway recursive;
+
+        import filter {
+            # If this route came from iBGP peers,
+            if bgp_next_hop.mask($MASK) = from.mask($MASK) then {
+                # use the NEXT_HOP as the gateway address.
+                gw = bgp_next_hop;
+                accept;
+            }
+
+            # Otherwise, use the router address as the gateway address.
+            # This is virtually equal to "next hop self" on receiver side.
+            gw = from;
+            accept;
+        };
+        export all;
+    };
+}
+protocol bgp tor1 from tor {
+    neighbor $TOR1 as $ASN;
+}
+protocol bgp tor2 from tor {
+    neighbor $TOR2 as $ASN;
+}

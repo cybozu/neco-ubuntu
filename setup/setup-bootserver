@@ -1,0 +1,135 @@
+#!/usr/bin/python3
+
+import argparse
+import ipaddress
+import json
+import os
+import shutil
+import string
+import subprocess
+import sys
+
+
+ETCD_DATA_DIR = '/var/lib/etcd-container'
+ETCD_DATA_DIR_UID = 10000
+ETCD_DATA_DIR_GID = 10000
+SABAKAN_DATA_DIR = '/var/lib/sabakan'
+ETCDCONF_TMPL = 'etcd.conf.yml.template'
+ETCDCONF = '/etc/etcd/etcd.conf.yml'
+SABAKANCONF_TMPL = 'sabakan.yml.template'
+SABAKANCONF = '/usr/local/etc/sabakan.yml'
+RACK_INFORMATION = '/etc/neco/rack'
+
+
+def boot_node0_ip(lrn: int) -> ipaddress.IPv4Address:
+    return ipaddress.IPv4Address('10.69.0.0') + 192 * lrn + 3
+
+
+def my_lrn() -> int:
+    with open(RACK_INFORMATION) as f:
+        return int(f.read())
+
+
+def prepare_etcd_data_dir():
+    if os.path.exists(ETCD_DATA_DIR):
+        raise RuntimeError(ETCD_DATA_DIR + ' already exists')
+    os.makedirs(ETCD_DATA_DIR, 0o755)
+    os.chown(ETCD_DATA_DIR, ETCD_DATA_DIR_UID, ETCD_DATA_DIR_GID)
+
+
+def prepare_sabakan_data_dir():
+    if os.path.exists(SABAKAN_DATA_DIR):
+        raise RuntimeError(SABAKAN_DATA_DIR + ' already exists')
+    os.makedirs(SABAKAN_DATA_DIR, 0o755)
+
+
+def initial_cluster_url(lrn: int) -> str:
+    name = "boot-{}".format(lrn)
+    url="http://{}:2380".format(boot_node0_ip(lrn))
+    return name + "=" + url
+
+
+def dump_file(name: str, data: str):
+    os.makedirs(os.path.dirname(name), 0o755, exist_ok=True)
+    with open(name, "w") as f:
+        f.write(data)
+        f.flush()
+        os.fsync(f.fileno())
+
+
+def systemctl(*args):
+    cmd = ["systemctl"]
+    cmd.extend(args)
+    subprocess.run(cmd, check=True)
+
+
+def setup_etcd(lrn: int, racks: [int]):
+    node0 = boot_node0_ip(lrn)
+
+    prepare_etcd_data_dir()
+    with open(ETCDCONF_TMPL) as f:
+        templ = string.Template(f.read())
+    data = templ.substitute(
+        lrn=lrn,
+        initial_advertise_peer_urls='http://{!s}:2380'.format(node0),
+        advertise_client_urls='http://{!s}:2379'.format(node0),
+        initial_cluster=','.join(initial_cluster_url(n) for n in racks),
+        initial_cluster_state="new",
+    )
+    dump_file(ETCDCONF, data)
+
+    shutil.copyfile("/extras/setup/etcd-container.service", "/etc/systemd/system/etcd-container.service")
+    systemctl("daemon-reload")
+    systemctl("enable", "etcd-container.service")
+    systemctl("start", "etcd-container.service")
+    print("Initialized etcd")
+
+
+def setup_sabakan(lrn: int, racks: [int]):
+    prepare_sabakan_data_dir()
+    with open(SABAKANCONF_TMPL) as f:
+        templ = string.Template(f.read())
+    etcd_servers = ['http://{!s}:2379'.format(boot_node0_ip(lrn)) for lrn in racks]
+    advertise_url = 'http://{!s}:10080'.format(boot_node0_ip(lrn))
+    data = templ.substitute(
+        advertise_url=advertise_url,
+        etcd_servers=json.dumps(etcd_servers),
+    )
+    dump_file(SABAKANCONF, data)
+
+    shutil.copyfile("/extras/setup/sabakan.service", "/etc/systemd/system/sabakan.service")
+    shutil.copyfile("/extras/setup/sabakan-local.service", "/etc/systemd/system/sabakan-local.service")
+    systemctl("daemon-reload")
+    systemctl("enable", "sabakan.service")
+    systemctl("start", "sabakan.service")
+    print("Initialized sabakan")
+
+
+def init(racks: [int]):
+    lrn = my_lrn()
+
+    if lrn in racks:
+        setup_etcd(lrn, racks)
+
+    setup_sabakan(lrn, racks)
+
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument('action', choices=['init'])
+    p.add_argument('racks', metavar='RACK_NUMBERS', type=int, nargs='+',
+                   help='logical rack numbers where etcd should run')
+
+    ns = p.parse_args()
+
+    if ns.action == 'init':
+        if len(ns.racks) < 3:
+            sys.exit('too few etcd servers')
+        for lrn in ns.racks:
+            if lrn < 0:
+                sys.exit('invalid rack number: {}'.format(lrn))
+        init(ns.racks)
+
+
+if __name__ == '__main__':
+    main()

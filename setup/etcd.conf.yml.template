@@ -1,0 +1,39 @@
+# This is the configuration file for the etcd server.
+
+# Human-readable name for this member.
+name: 'boot-${lrn}'
+
+# Path to the data directory.
+data-dir: '/var/lib/etcd'
+
+# List of comma separated URLs to listen on for peer traffic.
+listen-peer-urls: http://0.0.0.0:2380
+
+# List of comma separated URLs to listen on for client traffic.
+listen-client-urls: http://0.0.0.0:2379
+
+# List of this member's peer URLs to advertise to the rest of the cluster.
+# The URLs needed to be a comma-separated list.
+initial-advertise-peer-urls: ${initial_advertise_peer_urls}
+
+# List of this member's client URLs to advertise to the public.
+# The URLs needed to be a comma-separated list.
+advertise-client-urls: ${advertise_client_urls}
+
+# Initial cluster configuration for bootstrapping.
+initial-cluster: ${initial_cluster}
+
+# Initial cluster token for the etcd cluster during bootstrap.
+initial-cluster-token: 'boot-cluster'
+
+# Initial cluster state ('new' or 'existing').
+initial-cluster-state: '${initial_cluster_state}'
+
+# Accept etcd V2 client requests
+enable-v2: false
+
+# Enable runtime profiling data via HTTP server
+enable-pprof: true
+
+auto-compaction-mode: periodic
+auto-compaction-retention: "24"

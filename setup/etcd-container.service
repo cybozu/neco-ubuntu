@@ -1,0 +1,27 @@
+[Unit]
+Description=Etcd container on rkt
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/etc/etcd/etcd.conf.yml
+
+[Service]
+Slice=machine.slice
+Type=simple
+KillMode=mixed
+Restart=on-failure
+RestartForceExitStatus=SIGPIPE
+OOMScoreAdjust=-1000
+ExecStart=/usr/bin/rkt run \
+  --pull-policy never \
+  --volume data,kind=host,source=/var/lib/etcd-container --mount volume=data,target=/var/lib/etcd \
+  --volume conf,kind=host,source=/etc/etcd,readOnly=true --mount volume=conf,target=/etc/etcd \
+  --port=2379-tcp:2379 --port=2380-tcp:2380 \
+  quay.io/cybozu/etcd:3.3 \
+    --user 10000 --group 10000 \
+    --name etcd \
+    --readonly-rootfs=true \
+  -- \
+    --config-file=/etc/etcd/etcd.conf.yml
+
+[Install]
+WantedBy=multi-user.target
