@@ -16,6 +16,7 @@ echo "d\n1\nn\n\n\n\n\nw\ny\n" | gdisk $NBD >/dev/null
 
 # copy files
 kpartx -a $NBD
+sleep 2
 mount $NBDp1 /mnt
 mkdir /mnt/extras
 cp -a "$@" /mnt/extras
