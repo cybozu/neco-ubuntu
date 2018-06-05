@@ -26,7 +26,7 @@ SABACTL=$(GOPATH)/bin/sabactl
 DOCKER2ACI_URL=https://github.com/appc/docker2aci/releases/download/v0.17.2/docker2aci-v0.17.2.tar.gz
 DOCKER2ACI=$(BUILD_DIR)/docker2aci
 
-BUILD_DEPS:=xorriso qemu-utils qemu-kvm ovmf curl ca-certificates cloud-image-utils gdisk parted
+BUILD_DEPS:=xorriso qemu-utils qemu-kvm ovmf curl ca-certificates cloud-image-utils gdisk kpartx
 CONTAINERS:=\
 	bird:2.0 \
 	ubuntu-debug:18.04 \

@@ -4,18 +4,19 @@ IMAGE=$1
 shift
 
 NBD=/dev/nbd0
+NBDp1=/dev/mapper/nbd0p1
 
 modprobe nbd
 qemu-nbd -c $NBD $IMAGE
-trap "qemu-nbd -d $NBD" INT QUIT TERM 0
+trap "kpartx -d $NBD 2>/dev/null; qemu-nbd -d $NBD" INT QUIT TERM 0
 
 # resize part1
-partprobe /dev/nbd0 2>/dev/null
-echo "d\n1\nn\n\n\n\n\nw\ny\ny\n" | gdisk /dev/sda >/dev/null
-echo "d\n1\nn\n\n\n\n\nw\ny\n" | gdisk /dev/sda >/dev/null
+echo "d\n1\nn\n\n\n\n\nw\ny\ny\n" | gdisk $NBD >/dev/null
+echo "d\n1\nn\n\n\n\n\nw\ny\n" | gdisk $NBD >/dev/null
 
 # copy files
-mount ${NBD}p1 /mnt
+kpartx -a $NBD
+mount $NBDp1 /mnt
 mkdir /mnt/extras
 cp -a "$@" /mnt/extras
 sync
