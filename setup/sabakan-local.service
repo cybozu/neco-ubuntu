@@ -2,6 +2,7 @@
 Description=Local Sabakan server
 AssertPathExists=/usr/local/etc/sabakan.yml
 Conflicts=sabakan.service
+After=sabakan.service
 
 [Service]
 Type=simple

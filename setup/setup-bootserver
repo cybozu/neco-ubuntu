@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import argparse
+import getpass
 import ipaddress
 import json
 import os
@@ -85,7 +86,7 @@ def setup_etcd(lrn: int, racks: [int]):
     print("Initialized etcd")
 
 
-def setup_sabakan(lrn: int, racks: [int]):
+def setup_sabakan(lrn: int, racks: [int], password: str):
     prepare_sabakan_data_dir()
     with open(SABAKANCONF_TMPL) as f:
         templ = string.Template(f.read())
@@ -94,6 +95,7 @@ def setup_sabakan(lrn: int, racks: [int]):
     data = templ.substitute(
         advertise_url=advertise_url,
         etcd_servers=json.dumps(etcd_servers),
+        etcd_password=password,
     )
     dump_file(SABAKANCONF, data)
 
@@ -105,22 +107,28 @@ def setup_sabakan(lrn: int, racks: [int]):
     print("Initialized sabakan")
 
 
-def init(racks: [int]):
+def init(racks: [int], password: str):
     lrn = my_lrn()
 
     if lrn in racks:
         setup_etcd(lrn, racks)
 
-    setup_sabakan(lrn, racks)
+    setup_sabakan(lrn, racks, password)
 
 
 def main():
     p = argparse.ArgumentParser()
+    p.add_argument('--sabakan-etcd-password', dest='password',
+                   help='etcd user password (only for GCP env)')
     p.add_argument('action', choices=['init'])
     p.add_argument('racks', metavar='RACK_NUMBERS', type=int, nargs='+',
                    help='logical rack numbers where etcd should run')
 
     ns = p.parse_args()
+
+    password = ns.password
+    if password is None:
+        password = getpass.getpass('sabakan etcd password: ')
 
     if ns.action == 'init':
         if len(ns.racks) < 3:
@@ -128,7 +136,7 @@ def main():
         for lrn in ns.racks:
             if lrn < 0:
                 sys.exit('invalid rack number: {}'.format(lrn))
-        init(ns.racks)
+        init(ns.racks, password)
 
 
 if __name__ == '__main__':
