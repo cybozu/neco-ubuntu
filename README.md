@@ -84,23 +84,23 @@ Use [cloud-init][] to configure your cloud instance.
     ```console
     $ cd /extas/setup
     $ sudo ./setup-bootserver init RACK1 RACK2 RACK3 [RACK...]
-    sabakan etcd password: xxxx
+    sabakan etcd password: yyyy
     ```
 
     As shown, `setup-bootserver` asks a password.  This will be used for etcd
     authentication.  The username of etcd is fixed as `sabakan`.  If you want
-    to enable etcd authentication, create `sabakan` user as follows:
+    to enable etcd authentication, run `setup-etcd-user` script as follows:
 
     ```console
-    $ etcdctl user add root
-    Password: xxxx
-    $ etcdctl user add sabakan
-    Password: (the password given to setup-bootserver)
-    $ etcdctl role add sabakan
-    $ etcdctl role grant-permission sabakan --prefix=true readwrite /sabakan/
-    $ etcdctl user grant-role sabakan sabakan
-    $ etcdctl auth enable
+    $ cd /extras/setup
+    $ sudo ./setup-etcd-user
+    root password: xxxx
+    sabakan password: yyyy
+    backup password: zzzz
     ```
+
+    Note that `sabakan password` must be the same as the password given to
+    `setup-bootserver`.  Be warned that these passwords should be kept securely.
 
 ### Notes
 
