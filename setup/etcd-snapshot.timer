@@ -1,0 +1,10 @@
+[Unit]
+Description=get snapshot of etcd
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=1min
+Persistent=false
+
+[Install]
+WantedBy=timers.target
