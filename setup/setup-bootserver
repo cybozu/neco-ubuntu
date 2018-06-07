@@ -114,7 +114,8 @@ def setup_etcd_backup(password: str):
 
     dump_file(ETCD_BACKUP_PASSWORD, password)
 
-    shutil.copyfile("/extras/setup/etcd-backup.sh", "/usr/local/bin/etcd-backup.sh")
+    shutil.copyfile("/extras/setup/etcd-backup", "/usr/local/bin/etcd-backup")
+    os.chmod("/usr/local/bin/etcd-backup", 0o755)
     shutil.copyfile("/extras/setup/etcd-backup.service", "/etc/systemd/system/etcd-backup.service")
     shutil.copyfile("/extras/setup/etcd-backup.timer", "/etc/systemd/system/etcd-backup.timer")
 

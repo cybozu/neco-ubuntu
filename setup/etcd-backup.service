@@ -3,4 +3,4 @@ Description=get snapshot of etcd
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/etcd-backup.sh
+ExecStart=/usr/local/bin/etcd-backup
