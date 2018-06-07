@@ -88,7 +88,7 @@ Use [cloud-init][] to configure your cloud instance.
     backup etcd password: zzzz
     ```
 
-    As shown, `setup-bootserver` asks a password.  This will be used for etcd
+    As shown, `setup-bootserver` asks passwords.  This will be used for etcd
     authentication.  The first password is for `sabakan` user of etcd, second
     is for `backup` user.  If you want to enable etcd authentication, run
     `setup-etcd-user` script as follows:
