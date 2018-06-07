@@ -109,8 +109,7 @@ d-i finish-install/reboot_in_progress note
 
 d-i preseed/late_command string \
        mkdir -p /target/extras; \
-       cp -a /cdrom/pool/extras/* /target/extras/; \
-       in-target sh -c 'dpkg -i /extras/*.deb; apt-get install -yf; rm /extras/*.deb'
+       cp -a /cdrom/pool/extras/* /target/extras/;
 
 #### ORIGINAL CONTENTS
 

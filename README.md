@@ -56,11 +56,10 @@ Use [cloud-init][] to configure your cloud instance.
 1. Install `rkt`
 
     For cloud image installation, install `rkt` as follows.
-    ISO installation did this automatically.
 
     ```console
-    $ cd /extras
-    $ sudo dpkg -i *.deb
+    $ cd /extras/setup
+    $ sudo ./setup-rkt
     ```
 
 2. Configure network
