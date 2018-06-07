@@ -1,0 +1,8 @@
+[Unit]
+Description=get snapshot of etcd
+PartOf=etcd-container.service
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=1min
+Persistent=true

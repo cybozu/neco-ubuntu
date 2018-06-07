@@ -78,18 +78,20 @@ Use [cloud-init][] to configure your cloud instance.
 
     Run `setup-bootserver` script as follows.
     This configures [`sabakan`][sabakan], a distributed network boot service.
-    Additionally, the script also configures `etcd` if the rack matches the
-    given rack number on the command-line.
+    Additionally, the script also configures `etcd` and `etcd-backup` if the
+    rack matches the given rack number on the command-line.
 
     ```console
     $ cd /extas/setup
     $ sudo ./setup-bootserver init RACK1 RACK2 RACK3 [RACK...]
     sabakan etcd password: yyyy
+    backup etcd password: zzzz
     ```
 
-    As shown, `setup-bootserver` asks a password.  This will be used for etcd
-    authentication.  The username of etcd is fixed as `sabakan`.  If you want
-    to enable etcd authentication, run `setup-etcd-user` script as follows:
+    As shown, `setup-bootserver` asks passwords.  This will be used for etcd
+    authentication.  The first password is for `sabakan` user of etcd, second
+    is for `backup` user.  If you want to enable etcd authentication, run
+    `setup-etcd-user` script as follows:
 
     ```console
     $ cd /extras/setup
@@ -109,6 +111,7 @@ After setup, the system is configured as follows.
 * etcd authentication is *not* enabled.
 * Running `systemd-networkd` instead of `netplan.io`.  `netplan.io` is purged.
 * Running `rkt` containers as systemd services.  Use `sudo rkt list` to get the list of them.
+* `etcd-backup.service` is kicked by systemd.timer once an hour. It gets a snapshot from etcd.
 * The rack number of the server is stored in `/etc/neco/rack` file.
 * The cluster ID of the server is stored in `/etc/neco/cluster` file.
 

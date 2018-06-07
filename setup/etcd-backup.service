@@ -1,0 +1,6 @@
+[Unit]
+Description=get snapshot of etcd
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/etcd-backup

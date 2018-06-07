@@ -2,6 +2,7 @@
 Description=Etcd container on rkt
 Wants=network-online.target
 After=network-online.target
+Wants=etcd-backup.timer
 ConditionPathExists=/etc/etcd/etcd.conf.yml
 
 [Service]
@@ -15,6 +16,7 @@ ExecStart=/usr/bin/rkt run \
   --pull-policy never \
   --volume data,kind=host,source=/var/lib/etcd-container --mount volume=data,target=/var/lib/etcd \
   --volume conf,kind=host,source=/etc/etcd,readOnly=true --mount volume=conf,target=/etc/etcd \
+  --volume backup,kind=host,source=/var/lib/etcd-backup --mount volume=backup,target=/var/lib/etcd-backup \
   --port=2379-tcp:2379 --port=2380-tcp:2380 \
   quay.io/cybozu/etcd:3.3 \
     --user 10000 --group 10000 \
