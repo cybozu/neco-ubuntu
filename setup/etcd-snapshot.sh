@@ -11,7 +11,7 @@ if [ -z "$uuid" ]; then
   exit 1
 fi
 
-rkt enter --app=etcd $uuid etcdctl --user backup:${ETCD_PASSWD} snapshot save /var/lib/etcd/${SNAPSHOT}
-tar --remove-files -cvzf /var/lib/etcd-snapshot/${SNAPSHOT}.tar.gz /var/lib/etcd-container/${SNAPSHOT}
+rkt enter --app=etcd $uuid etcdctl --user backup:${ETCD_PASSWD} snapshot save /var/lib/etcd-snapshot/${SNAPSHOT}
+tar --remove-files -cvzf /var/lib/etcd-snapshot/${SNAPSHOT}.tar.gz /var/lib/etcd-snapshot/${SNAPSHOT}
 
 find /var/lib/etcd-snapshot/ -mtime 14 -exec rm -f {} \;
