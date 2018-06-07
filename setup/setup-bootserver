@@ -120,7 +120,6 @@ def setup_etcd_backup(password: str):
     shutil.copyfile("/extras/setup/etcd-backup.timer", "/etc/systemd/system/etcd-backup.timer")
 
     systemctl("daemon-reload")
-    systemctl("enable", "etcd-backup.timer")
     systemctl("start", "etcd-backup.timer")
     print("Initialized etcd-backup")
 
