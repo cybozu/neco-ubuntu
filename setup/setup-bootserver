@@ -10,7 +10,6 @@ import string
 import subprocess
 import sys
 
-
 ETCD_DATA_DIR = '/var/lib/etcd-container'
 ETCD_DATA_DIR_UID = 10000
 ETCD_DATA_DIR_GID = 10000
@@ -46,7 +45,7 @@ def prepare_sabakan_data_dir():
 
 def initial_cluster_url(lrn: int) -> str:
     name = "boot-{}".format(lrn)
-    url="http://{}:2380".format(boot_node0_ip(lrn))
+    url = "http://{}:2380".format(boot_node0_ip(lrn))
     return name + "=" + url
 
 
