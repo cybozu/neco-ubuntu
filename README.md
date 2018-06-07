@@ -85,6 +85,7 @@ Use [cloud-init][] to configure your cloud instance.
     $ cd /extas/setup
     $ sudo ./setup-bootserver init RACK1 RACK2 RACK3 [RACK...]
     sabakan etcd password: yyyy
+    backup etcd password: zzzz
     ```
 
     As shown, `setup-bootserver` asks a password.  This will be used for etcd
