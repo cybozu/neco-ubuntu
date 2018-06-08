@@ -1,0 +1,47 @@
+#!/usr/bin/python3
+
+import argparse
+import json
+import os
+import subprocess
+import time
+
+
+def pod_uuid(app: str) -> str:
+    while True:
+        p = subprocess.run(['rkt', 'list', '--format=json'], stdout=subprocess.PIPE, check=True)
+        j = json.loads(p.stdout)
+        # for unknown reason, "rkt list" sometimes returns null...
+        if j is not None:
+            break
+        time.sleep(1)
+
+    for d in j:
+        if 'app_names' not in d:
+            continue
+        if app not in d['app_names']:
+            continue
+        if d['state'] != 'running':
+            continue
+        return d['name']
+    raise RuntimeError('no running {} pod'.format(app))
+
+
+def main():
+    parser = argparse.ArgumentParser(description='util for entering into rkt pod')
+    parser.add_argument('app_name')
+    parser.add_argument('--debug', action='store_true', help='enter ubuntu-debug container instead of app_name')
+    parser.add_argument('commands', nargs='*')
+
+    args = parser.parse_args()
+
+    uuid = pod_uuid(args.app_name)
+
+    if args.debug:
+        os.execvp('sudo', ["sudo", "rkt", "enter", "--app", 'ubuntu-debug', uuid, *args.commands])
+    else:
+        os.execvp('sudo', ["sudo", "rkt", "enter", "--app", args.app_name, uuid, *args.commands])
+
+
+if __name__ == '__main__':
+    main()

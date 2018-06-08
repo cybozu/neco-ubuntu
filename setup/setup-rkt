@@ -1,0 +1,27 @@
+#!/usr/bin/python3
+
+import glob
+import os
+import shutil
+import subprocess
+
+
+def setup_rkt():
+    for target in glob.glob("/extras/rkt*.deb"):
+        subprocess.run(["sudo", "dpkg", "-i", target], check=True)
+    subprocess.run(["sudo", "apt-get", "install", "-yf"], check=True)
+
+
+def setup_utils():
+    shutil.copyfile("/extras/setup/podenter", "/usr/local/bin/podenter")
+    os.chmod("/usr/local/bin/podenter", 0o755)
+    print("copied podenter")
+
+
+def main():
+    setup_rkt()
+    setup_utils()
+
+
+if __name__ == '__main__':
+    main()
