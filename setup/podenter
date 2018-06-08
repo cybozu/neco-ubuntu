@@ -2,8 +2,8 @@
 
 import argparse
 import json
-import subprocess
 import os
+import subprocess
 import time
 
 
@@ -28,8 +28,7 @@ def pod_uuid(app: str) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description='util for entering into rkt pod',
-                                     usage="podenter app_name [commands...]")
+    parser = argparse.ArgumentParser(description='util for entering into rkt pod')
     parser.add_argument('app_name')
     parser.add_argument('--debug', action='store_true', help='enter ubuntu-debug container instead of app_name')
     parser.add_argument('commands', nargs='*')
@@ -37,8 +36,6 @@ def main():
     args = parser.parse_args()
 
     uuid = pod_uuid(args.app_name)
-    if uuid == "":
-        raise RuntimeError("{} is not running".format(args.app_name))
 
     if args.debug:
         os.execvp('sudo', ["sudo", "rkt", "enter", "--app", 'ubuntu-debug', uuid, *args.commands])

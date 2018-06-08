@@ -10,8 +10,6 @@ def setup_rkt():
     for target in glob.glob("/extras/rkt*.deb"):
         subprocess.run(["sudo", "dpkg", "-i", target], check=True)
     subprocess.run(["sudo", "apt-get", "install", "-yf"], check=True)
-    for target in glob.glob("/extras/rkt*.deb"):
-        subprocess.run(["sudo", "dpkg", "-i", target], check=True)
 
 
 def setup_utils():
