@@ -2,6 +2,7 @@
 
 import argparse
 import getpass
+import glob
 import ipaddress
 import json
 import os
@@ -20,6 +21,7 @@ ETCDCONF_TMPL = 'etcd.conf.yml.template'
 ETCDCONF = '/etc/etcd/etcd.conf.yml'
 SABAKANCONF_TMPL = 'sabakan.yml.template'
 SABAKANCONF = '/usr/local/etc/sabakan.yml'
+ETCDPASSWDCONF = '/etc/etcdpasswd.yml'
 RACK_INFORMATION = '/etc/neco/rack'
 
 
@@ -123,22 +125,50 @@ def setup_etcd_backup(password: str):
     print("Initialized etcd-backup")
 
 
-def init(racks: [int], saba_passwd: str, backup_passwd: str):
+def setup_etcdpasswd(racks: [int], password: str):
+    etcd_servers = ['http://{!s}:2379'.format(boot_node0_ip(lrn)) for lrn in racks]
+    tmpl = string.Template('''servers: ${etcd_servers}
+username: etcdpasswd
+password: ${password}
+''')
+    data = tmpl.substitute(
+        etcd_servers=json.dumps(etcd_servers),
+        password=password,
+    )
+    dump_file(ETCDPASSWDCONF, data)
+
+    deb = glob.glob('/extras/etcdpasswd*.deb')
+    subprocess.run(['dpkg', '-i', deb[0]], check=True)
+
+    shutil.copyfile('/extras/setup/sshd_config', '/etc/ssh/sshd_config')
+    # do not restart ssh.service at this point.
+
+    shutil.copyfile('/extras/setup/sudoers', '/etc/sudoers.d/.cybozu')
+    os.chmod('/etc/sudoers.d/.cybozu', 0o440)
+    os.rename('/etc/sudoers.d/.cybozu', '/etc/sudoers.d/cybozu')
+    print("Initialized etcdpasswd")
+
+
+def init(racks: [int], saba_passwd: str, backup_passwd: str, etcdpasswd_passwd: str):
     lrn = my_lrn()
 
     if lrn in racks:
         setup_etcd(lrn, racks)
         setup_etcd_backup(backup_passwd)
 
+    setup_etcdpasswd(racks, etcdpasswd_passwd)
     setup_sabakan(lrn, racks, saba_passwd)
+    os.sync()
 
 
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--sabakan-etcd-password', dest='saba_passwd',
                    help='etcd sabakan user password (only for GCP env)')
-    p.add_argument('--etcd-backup-password', dest='backup_passwd',
+    p.add_argument('--backup-etcd-password', dest='backup_passwd',
                    help='etcd backup user password (only for GCP env)')
+    p.add_argument('--etcdpasswd-etcd-password', dest='etcdpasswd_passwd',
+                   help='etcdpasswd user password (only for GCP env)')
     p.add_argument('action', choices=['init'])
     p.add_argument('racks', metavar='RACK_NUMBERS', type=int, nargs='+',
                    help='logical rack numbers where etcd should run')
@@ -153,13 +183,18 @@ def main():
     if backup_passwd is None:
         backup_passwd = getpass.getpass('backup etcd password: ')
 
+    etcdpasswd_passwd = ns.etcdpasswd_passwd
+    if etcdpasswd_passwd is None:
+        etcdpasswd_passwd = getpass.getpass('etcdpasswd etcd password: ')
+
     if ns.action == 'init':
         if len(ns.racks) < 3:
             sys.exit('too few etcd servers')
         for lrn in ns.racks:
             if lrn < 0:
                 sys.exit('invalid rack number: {}'.format(lrn))
-        init(ns.racks, saba_passwd, backup_passwd)
+        init(ns.racks, saba_passwd, backup_passwd, etcdpasswd_passwd)
+        return
 
 
 if __name__ == '__main__':
