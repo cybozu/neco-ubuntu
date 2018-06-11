@@ -75,6 +75,20 @@ def configure_backup(etcdctl, passwd):
     print('added backup user.')
 
 
+def configure_etcdpasswd(etcdctl, passwd):
+    if user_exists(etcdctl, 'etcdpasswd'):
+        return
+    if not role_exists(etcdctl, 'etcdpasswd'):
+        etcdctl('role', 'add', 'etcdpasswd', check=True)
+        etcdctl('role', 'grant-permission', 'etcdpasswd',
+                '--prefix=true', 'readwrite', '/passwd/', check=True)
+    if passwd is None:
+        passwd = getpass.getpass('etcdpasswd password: ')
+    etcdctl('user', 'add', '--interactive=false', 'etcdpasswd', input=passwd, check=True)
+    etcdctl('user', 'grant-role', 'etcdpasswd', 'etcdpasswd', check=True)
+    print('added etcdpasswd user.')
+
+
 def main():
     p = argparse.ArgumentParser(description='setup etcd user and enable authentication')
     p.add_argument('--root-password', dest='root_passwd',
@@ -83,6 +97,8 @@ def main():
                    help='etcd sabakan user password (only for GCP env)')
     p.add_argument('--backup-password', dest='backup_passwd',
                    help='etcd backup user password (only for GCP env)')
+    p.add_argument('--etcdpasswd-password', dest='etcdpasswd_passwd',
+                   help='etcdpasswd user password (only for GCP env)')
     ns = p.parse_args()
 
     root_passwd = ns.root_passwd
@@ -101,6 +117,7 @@ def main():
     configure_root(etcdctl, root_passwd)
     configure_sabakan(etcdctl, ns.saba_passwd)
     configure_backup(etcdctl, ns.backup_passwd)
+    configure_etcdpasswd(etcdctl, ns.etcdpasswd_passwd)
 
     etcdctl('auth', 'enable', check=True)
     print('enabled etcd authentication.')

@@ -27,6 +27,15 @@ Build
     This file will be read by `setup-neco-network`.
     An example of the file is available at `setup/cluster.json.example`.
 
+1. Prepare [etcdpasswd][] repository.
+
+    You may create a symlink to an existing `etcdpasswd` directory, or
+    clone it as follows:
+
+    ```console
+    $ git clone https://github.com/cybozu-go/etcdpasswd
+    ```
+
 1. Run `make` to see available build options.
 1. Run `make setup`.  This is a one-time procedure.
 1. Run `make all` to build everything.
@@ -76,7 +85,9 @@ Use [cloud-init][] to configure your cloud instance.
 3. Configure and run `sabakan` and `etcd`
 
     Run `setup-bootserver` script as follows.
-    This configures [`sabakan`][sabakan], a distributed network boot service.
+    This configures [`sabakan`][sabakan], a distributed network boot service,
+    and [`etcdpasswd`][etcdpasswd], a distributed user/group management service.
+
     Additionally, the script also configures `etcd` and `etcd-backup` if the
     rack matches the given rack number on the command-line.
 
@@ -85,12 +96,13 @@ Use [cloud-init][] to configure your cloud instance.
     $ sudo ./setup-bootserver init RACK1 RACK2 RACK3 [RACK...]
     sabakan etcd password: yyyy
     backup etcd password: zzzz
+    etcdpasswd etcd password: qqqq
     ```
 
     As shown, `setup-bootserver` asks passwords.  This will be used for etcd
-    authentication.  The first password is for `sabakan` user of etcd, second
-    is for `backup` user.  If you want to enable etcd authentication, run
-    `setup-etcd-user` script as follows:
+    authentication.  The first password is for `sabakan` user of etcd, the
+    second is for `backup`, and the third is for `etcdpasswd`.  If you want
+    to enable etcd authentication, run `setup-etcd-user` script as follows:
 
     ```console
     $ cd /extras/setup
@@ -98,10 +110,12 @@ Use [cloud-init][] to configure your cloud instance.
     root password: xxxx
     sabakan password: yyyy
     backup password: zzzz
+    etcdpasswd password: qqqq
     ```
 
-    Note that `sabakan password` must be the same as the password given to
-    `setup-bootserver`.  Be warned that these passwords should be kept securely.
+    Note that passwords given to `setup-etcd-user` should be the same as
+    those given to `setup-bootserver`.
+    Be warned that these passwords should be kept securely.
 
 ### Notes
 
@@ -111,6 +125,7 @@ After setup, the system is configured as follows.
 * Running `systemd-networkd` instead of `netplan.io`.  `netplan.io` is purged.
 * Running `rkt` containers as systemd services.  Use `sudo rkt list` to get the list of them.
 * `etcd-backup.service` is kicked by systemd.timer once an hour. It gets a snapshot from etcd.
+* Running `ep-agent.service` to synchronize users and groups.
 * The rack number of the server is stored in `/etc/neco/rack` file.
 * The cluster ID of the server is stored in `/etc/neco/cluster` file.
 
@@ -123,4 +138,5 @@ License
 [placemat-menu]: https://github.com/cybozu-go/placemat-menu
 [cloud-init]: https://cloudinit.readthedocs.io/
 [sabakan]: https://github.com/cybozu-go/sabakan
+[etcdpasswd]: https://github.com/cybozu-go/etcdpasswd
 [MIT]: https://opensource.org/licenses/MIT
