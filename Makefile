@@ -26,8 +26,6 @@ ETCDPASSWD_DEB_PATH=build/$(ETCDPASSWD_DEB_NAME)
 
 DEBS=$(RKT_DEB_PATH) $(ETCDPASSWD_DEB_PATH)
 
-SABACTL=$(GOPATH)/bin/sabactl
-
 DOCKER2ACI_URL=https://github.com/appc/docker2aci/releases/download/v0.17.2/docker2aci-v0.17.2.tar.gz
 DOCKER2ACI=$(BUILD_DIR)/docker2aci
 
@@ -86,9 +84,6 @@ etcdpasswd/$(ETCDPASSWD_DEB_NAME): etcdpasswd/Makefile
 $(ETCDPASSWD_DEB_PATH): etcdpasswd/$(ETCDPASSWD_DEB_NAME)
 	mv $< $@
 
-$(SABACTL):
-	go get -u github.com/cybozu-go/sabakan/...
-
 $(DOCKER2ACI):
 	cd $(BUILD_DIR); $(CURL) $(DOCKER2ACI_URL) | tar -x -z -f - --strip-components=1
 
@@ -96,7 +91,7 @@ $(DOCKER2ACI):
 	cd $(BUILD_DIR); ./docker2aci $$(echo $@ | sed -r 's,build/cybozu-(.*)-([^-]+).aci,docker://quay.io/cybozu/\1:\2,')
 	chmod 644 $@
 
-$(CUSTOM_ISO_PATH): $(ORIGINAL_ISO_PATH) $(DEBS) $(SABACTL) $(ACI_FILES) $(CLUSTER_JSON)
+$(CUSTOM_ISO_PATH): $(ORIGINAL_ISO_PATH) $(DEBS) $(ACI_FILES) $(CLUSTER_JSON)
 	rm -rf $(SRC_DIR_PATH)
 	mkdir -p $(SRC_DIR_PATH)
 	xorriso -osirrox on -indev $(ORIGINAL_ISO_PATH) \
@@ -112,7 +107,6 @@ $(CUSTOM_ISO_PATH): $(ORIGINAL_ISO_PATH) $(DEBS) $(SABACTL) $(ACI_FILES) $(CLUST
 	# Add container runtimes
 	mkdir -p $(SRC_DIR_PATH)/pool/extras
 	cp $(DEBS) $(SRC_DIR_PATH)/pool/extras/
-	cp $(SABACTL) $(SRC_DIR_PATH)/pool/extras/
 	cp $(ACI_FILES) $(SRC_DIR_PATH)/pool/extras/
 	cp -r $(SCRIPT_DIR) $(SRC_DIR_PATH)/pool/extras/
 
@@ -134,10 +128,10 @@ preview-iso: $(CUSTOM_ISO_PATH)
 		-drive file=$(PREVIEW_IMG) \
 		-drive file=$(CUSTOM_ISO_PATH),media=cdrom
 
-$(CUSTOM_CLOUD_PATH): $(ORIGINAL_CLOUD_PATH) $(DEBS) $(SABACTL) $(ACI_FILES) $(CLUSTER_JSON)
+$(CUSTOM_CLOUD_PATH): $(ORIGINAL_CLOUD_PATH) $(DEBS) $(ACI_FILES) $(CLUSTER_JSON)
 	cp $< $@
 	qemu-img resize $@ 10G
-	sudo ./resize-and-copy-in-qcow2 $@ $(DEBS) $(SABACTL) $(ACI_FILES) $(SCRIPT_DIR)
+	sudo ./resize-and-copy-in-qcow2 $@ $(DEBS) $(ACI_FILES) $(SCRIPT_DIR)
 
 preview-cloud: $(CUSTOM_CLOUD_PATH)
 	rm -f $(PREVIEW_IMG) $(LOCALDS_IMG)
