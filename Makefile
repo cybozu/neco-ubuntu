@@ -80,6 +80,7 @@ etcdpasswd/Makefile:
 
 etcdpasswd/$(ETCDPASSWD_DEB_NAME): etcdpasswd/Makefile
 	cd etcdpasswd; $(MAKE) clean
+	cd etcdpasswd; $(MAKE) setup
 	cd etcdpasswd; $(MAKE) deb
 
 $(ETCDPASSWD_DEB_PATH): etcdpasswd/$(ETCDPASSWD_DEB_NAME)
