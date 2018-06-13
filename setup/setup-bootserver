@@ -99,7 +99,7 @@ def setup_sabakan(lrn: int, racks: [int], password: str):
     subprocess.run([
         "tar", "-C", "/etc/bash_completion.d/",
         "-x", "-f", "/extras/cybozu-sabakan-0.aci",
-        "--strip-components", "4", "--transform", "'s/sabactl_completion.bash/sabactl/'",
+        "--strip-components", "4", "--transform", "s/sabactl_completion.bash/sabactl/",
         "rootfs/usr/local/sabakan/sabactl_completion.bash"], check=True)
 
     prepare_sabakan_data_dir()
