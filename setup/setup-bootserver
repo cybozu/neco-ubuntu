@@ -91,6 +91,17 @@ def setup_etcd(lrn: int, racks: [int]):
 
 
 def setup_sabakan(lrn: int, racks: [int], password: str):
+    subprocess.run([
+        "tar", "-C", "/usr/local/bin",
+        "-x", "-f", "/extras/cybozu-sabakan-0.aci",
+        "--strip-components", "5",
+        "rootfs/usr/local/sabakan/bin/sabactl"], check=True)
+    subprocess.run([
+        "tar", "-C", "/etc/bash_completion.d/",
+        "-x", "-f", "/extras/cybozu-sabakan-0.aci",
+        "--strip-components", "4", "--transform", "s/sabactl_completion.bash/sabactl/",
+        "rootfs/usr/local/sabakan/sabactl_completion.bash"], check=True)
+
     prepare_sabakan_data_dir()
     with open(SABAKANCONF_TMPL) as f:
         templ = string.Template(f.read())
