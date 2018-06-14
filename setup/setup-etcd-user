@@ -9,13 +9,10 @@ import time
 
 
 def pod_uuid(app: str) ->str:
-    while True:
-        p = subprocess.run(['rkt', 'list', '--format=json'], stdout=PIPE, check=True)
-        j = json.loads(p.stdout)
-        # for unknown reason, "rkt list" sometimes returns null...
-        if j is not None:
-            break
-        time.sleep(1)
+    p = subprocess.run(['rkt', 'list', '--format=json'], stdout=PIPE, check=True)
+    j = json.loads(p.stdout)
+    if j is None:
+        raise RuntimeError('no running {} pod'.format(app))
 
     for d in j:
         if 'app_names' not in d:
