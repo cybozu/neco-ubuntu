@@ -88,7 +88,7 @@ $(DOCKER2ACI):
 	cd $(BUILD_DIR); $(CURL) $(DOCKER2ACI_URL) | tar -x -z -f - --strip-components=1
 
 %.aci: $(DOCKER2ACI)
-	cd $(BUILD_DIR); ./docker2aci $$(echo $@ | sed -r 's,build/cybozu-([^0-9]+)-([0-9.-]+)\.aci,docker://quay.io/cybozu/\1:\2,')
+	cd $(BUILD_DIR); ./docker2aci $$(echo $@ | sed -r 's,build/cybozu-([^-]+)-([0-9.-]+)\.aci,docker://quay.io/cybozu/\1:\2,')
 	chmod 644 $@
 
 $(CUSTOM_ISO_PATH): $(ORIGINAL_ISO_PATH) $(DEBS) $(ACI_FILES) $(CLUSTER_JSON)
