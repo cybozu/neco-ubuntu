@@ -18,7 +18,7 @@ ExecStart=/usr/bin/rkt run \
   --volume data,kind=host,source=/var/lib/sabakan \
   --mount volume=data,target=/var/lib/sabakan \
   --net=host \
-  quay.io/cybozu/sabakan:0.9-2 \
+  quay.io/cybozu/sabakan:0 \
     --name sabakan \
     --readonly-rootfs=true \
     --caps-retain=CAP_NET_BIND_SERVICE \
