@@ -35,7 +35,7 @@ CONTAINERS:=\
 	ubuntu-debug:18.04 \
 	etcd:3.3 \
 	chrony:3.3 \
-	sabakan:0.9-2
+	sabakan:0.10-1
 ACI_FILES=$(patsubst %,build/cybozu-%.aci,$(subst :,-,$(CONTAINERS)))
 ARTIFACTS=$(ORIGINAL_ISO_PATH) $(ORIGINAL_CLOUD_PATH) $(RKT_DEB_PATH) $(DOCKER2ACI)
 PREVIEW_IMG=$(BUILD_DIR)/ubuntu.img
