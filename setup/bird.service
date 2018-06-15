@@ -5,6 +5,8 @@ After=network.target network-online.target
 
 [Service]
 Slice=machine.slice
+CPUSchedulingPolicy=rr
+CPUSchedulingPriority=50
 Type=simple
 KillMode=mixed
 Restart=on-failure
