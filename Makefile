@@ -29,6 +29,9 @@ DEBS=$(RKT_DEB_PATH) $(ETCDPASSWD_DEB_PATH)
 DOCKER2ACI_URL=https://github.com/appc/docker2aci/releases/download/v0.17.2/docker2aci-v0.17.2.tar.gz
 DOCKER2ACI=$(BUILD_DIR)/docker2aci
 
+PYTHON3_FILES=$(shell find setup/ -type f | xargs awk '/python3/ {print FILENAME} {nextfile}')
+PYLINT3:=pylint
+
 BUILD_DEPS:=xorriso qemu-utils qemu-kvm ovmf curl ca-certificates cloud-image-utils gdisk kpartx
 CONTAINERS:=\
 	bird:2.0 \
@@ -141,6 +144,9 @@ preview-cloud: $(CUSTOM_CLOUD_PATH)
 		-drive file=$(PREVIEW_IMG) \
 		-drive file=$(LOCALDS_IMG),format=raw
 
+lint:
+	$(PYLINT3) --rcfile=.pylint -d missing-docstring -d duplicate-code -f colorized $(PYTHON3_FILES)
+
 clean:
 	rm -rf $(CUSTOM_ISO_PATH) \
 		$(CUSTOM_CLOUD_PATH) \
@@ -151,6 +157,7 @@ fullclean: clean
 	rm -f $(ACI_FILES) $(ARTIFACTS)
 
 setup:
+	pip3 install pylint
 	sudo apt-get -y install --no-install-recommends $(BUILD_DEPS)
 
-.PHONY: help all iso cloud preview-iso preview-cloud clean fullclean setup
+.PHONY: help all iso cloud preview-iso preview-cloud lint clean fullclean setup
