@@ -26,7 +26,7 @@ def pod_uuid(app: str) ->str:
 
 
 def wait_etcd(etcdctl):
-    for i in range(300):
+    for _ in range(300):
         if etcdctl('get', '/').returncode == 0:
             return
         time.sleep(1)
