@@ -32,7 +32,7 @@ DOCKER2ACI=$(BUILD_DIR)/docker2aci
 PYTHON3_FILES=$(shell find setup/ -type f | xargs awk '/python3/ {print FILENAME} {nextfile}')
 PYLINT3:=pylint
 
-BUILD_DEPS:=xorriso qemu-utils qemu-kvm ovmf curl ca-certificates cloud-image-utils gdisk kpartx
+BUILD_DEPS:=xorriso qemu-utils qemu-kvm ovmf curl ca-certificates cloud-image-utils gdisk kpartx python3-pip python3-setuptools
 CONTAINERS:=\
 	bird:2.0 \
 	ubuntu-debug:18.04 \
