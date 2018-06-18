@@ -157,7 +157,7 @@ fullclean: clean
 	rm -f $(ACI_FILES) $(ARTIFACTS)
 
 setup:
-	pip3 install pylint
 	sudo apt-get -y install --no-install-recommends $(BUILD_DEPS)
+	pip3 install pylint
 
 .PHONY: help all iso cloud preview-iso preview-cloud lint clean fullclean setup
