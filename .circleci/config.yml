@@ -1,0 +1,12 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: quay.io/cybozu/golang:1.10-bionic
+    steps:
+      - run: apt-get update
+      - run: apt-get install -y --no-install-recommends python3-pip python3-setuptools
+      - run: pip3 install pylint pycodestyle
+
+      - checkout
+      - run: make lint

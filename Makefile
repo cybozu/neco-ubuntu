@@ -29,7 +29,12 @@ DEBS=$(RKT_DEB_PATH) $(ETCDPASSWD_DEB_PATH)
 DOCKER2ACI_URL=https://github.com/appc/docker2aci/releases/download/v0.17.2/docker2aci-v0.17.2.tar.gz
 DOCKER2ACI=$(BUILD_DIR)/docker2aci
 
-BUILD_DEPS:=xorriso qemu-utils qemu-kvm ovmf curl ca-certificates cloud-image-utils gdisk kpartx
+PYTHON3_FILES=$(shell find setup/ -type f | xargs awk '/python3/ {print FILENAME} {nextfile}')
+PYTHON3_DEPS:=pylint pycodestyle
+PYLINT3:=pylint
+PYCODESTYLE3:=pycodestyle
+
+BUILD_DEPS:=xorriso qemu-utils qemu-kvm ovmf curl ca-certificates cloud-image-utils gdisk kpartx python3-pip python3-setuptools
 CONTAINERS:=\
 	bird:2.0 \
 	ubuntu-debug:18.04 \
@@ -141,6 +146,10 @@ preview-cloud: $(CUSTOM_CLOUD_PATH)
 		-drive file=$(PREVIEW_IMG) \
 		-drive file=$(LOCALDS_IMG),format=raw
 
+lint:
+	$(PYLINT3) --rcfile=.pylint -d missing-docstring -d duplicate-code -f colorized $(PYTHON3_FILES)
+	$(PYCODESTYLE3) --max-line-length=140 $(PYTHON3_FILES)
+
 clean:
 	rm -rf $(CUSTOM_ISO_PATH) \
 		$(CUSTOM_CLOUD_PATH) \
@@ -152,5 +161,6 @@ fullclean: clean
 
 setup:
 	sudo apt-get -y install --no-install-recommends $(BUILD_DEPS)
+	pip3 install $(PYTHON3_DEPS)
 
-.PHONY: help all iso cloud preview-iso preview-cloud clean fullclean setup
+.PHONY: help all iso cloud preview-iso preview-cloud lint clean fullclean setup

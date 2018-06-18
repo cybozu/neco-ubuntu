@@ -26,7 +26,7 @@ def pod_uuid(app: str) ->str:
 
 
 def wait_etcd(etcdctl):
-    for i in range(300):
+    for _ in range(300):
         if etcdctl('get', '/').returncode == 0:
             return
         time.sleep(1)
@@ -103,9 +103,10 @@ def main():
         root_passwd = getpass.getpass('root password: ')
 
     uuid = pod_uuid('etcd')
+
     def etcdctl(*args, **kwargs) ->subprocess.CompletedProcess:
         cmd = ['rkt', 'enter', '--app=etcd', uuid,
-               'etcdctl', '--user=root:'+ root_passwd, *args]
+               'etcdctl', '--user=root:' + root_passwd, *args]
         if 'input' in kwargs and 'encoding' not in kwargs:
             kwargs['encoding'] = 'utf-8'
         return subprocess.run(cmd, **kwargs)
