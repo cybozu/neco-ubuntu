@@ -6,7 +6,7 @@ jobs:
     steps:
       - run: apt-get update
       - run: apt-get install -y --no-install-recommends python3-pip python3-setuptools
-      - run: pip3 install pylint
+      - run: pip3 install pylint pycodestyle
 
       - checkout
       - run: make lint
