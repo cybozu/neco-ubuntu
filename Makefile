@@ -30,7 +30,9 @@ DOCKER2ACI_URL=https://github.com/appc/docker2aci/releases/download/v0.17.2/dock
 DOCKER2ACI=$(BUILD_DIR)/docker2aci
 
 PYTHON3_FILES=$(shell find setup/ -type f | xargs awk '/python3/ {print FILENAME} {nextfile}')
+PYTHON3_DEPS:=pylint pycodestyle
 PYLINT3:=pylint
+PYCODESTYLE3:=pycodestyle
 
 BUILD_DEPS:=xorriso qemu-utils qemu-kvm ovmf curl ca-certificates cloud-image-utils gdisk kpartx python3-pip python3-setuptools
 CONTAINERS:=\
@@ -146,6 +148,7 @@ preview-cloud: $(CUSTOM_CLOUD_PATH)
 
 lint:
 	$(PYLINT3) --rcfile=.pylint -d missing-docstring -d duplicate-code -f colorized $(PYTHON3_FILES)
+	$(PYCODESTYLE3) --max-line-length=140 $(PYTHON3_FILES)
 
 clean:
 	rm -rf $(CUSTOM_ISO_PATH) \
@@ -158,6 +161,6 @@ fullclean: clean
 
 setup:
 	sudo apt-get -y install --no-install-recommends $(BUILD_DEPS)
-	pip3 install pylint
+	pip3 install $(PYTHON3_DEPS)
 
 .PHONY: help all iso cloud preview-iso preview-cloud lint clean fullclean setup
