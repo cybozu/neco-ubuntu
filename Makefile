@@ -41,6 +41,9 @@ CONTAINERS:=\
 	etcd:3.3 \
 	chrony:3.3 \
 	sabakan:0
+
+CRYPTSETUP=$(BUILD_DIR)/sabakan-cryptsetup
+
 ACI_FILES=$(patsubst %,build/cybozu-%.aci,$(subst :,-,$(CONTAINERS)))
 ARTIFACTS=$(ORIGINAL_ISO_PATH) $(ORIGINAL_CLOUD_PATH) $(RKT_DEB_PATH) $(DOCKER2ACI)
 PREVIEW_IMG=$(BUILD_DIR)/ubuntu.img
@@ -96,7 +99,10 @@ $(DOCKER2ACI):
 	cd $(BUILD_DIR); ./docker2aci $$(echo $@ | sed -r 's,build/cybozu-(.*)-([^-]+).aci,docker://quay.io/cybozu/\1:\2,')
 	chmod 644 $@
 
-$(CUSTOM_ISO_PATH): $(ORIGINAL_ISO_PATH) $(DEBS) $(ACI_FILES) $(CLUSTER_JSON)
+$(CRYPTSETUP):
+	GOBIN=$(CURDIR)/$(BUILD_DIR) go install github.com/cybozu-go/sabakan/cmd/sabakan-cryptsetup
+
+$(CUSTOM_ISO_PATH): $(ORIGINAL_ISO_PATH) $(DEBS) $(ACI_FILES) $(CLUSTER_JSON) $(CRYPTSETUP)
 	rm -rf $(SRC_DIR_PATH)
 	mkdir -p $(SRC_DIR_PATH)
 	xorriso -osirrox on -indev $(ORIGINAL_ISO_PATH) \
@@ -114,6 +120,9 @@ $(CUSTOM_ISO_PATH): $(ORIGINAL_ISO_PATH) $(DEBS) $(ACI_FILES) $(CLUSTER_JSON)
 	cp $(DEBS) $(SRC_DIR_PATH)/pool/extras/
 	cp $(ACI_FILES) $(SRC_DIR_PATH)/pool/extras/
 	cp -r $(SCRIPT_DIR) $(SRC_DIR_PATH)/pool/extras/
+
+	# Add other assets
+	cp $(CRYPTSETUP) $(SRC_DIR_PATH)/pool/extras/
 
 	# Build an ISO file
 	xorriso -as mkisofs -r -V "Custom Ubuntu Install CD" \
@@ -133,10 +142,10 @@ preview-iso: $(CUSTOM_ISO_PATH)
 		-drive file=$(PREVIEW_IMG) \
 		-drive file=$(CUSTOM_ISO_PATH),media=cdrom
 
-$(CUSTOM_CLOUD_PATH): $(ORIGINAL_CLOUD_PATH) $(DEBS) $(ACI_FILES) $(CLUSTER_JSON)
+$(CUSTOM_CLOUD_PATH): $(ORIGINAL_CLOUD_PATH) $(DEBS) $(ACI_FILES) $(CLUSTER_JSON) $(CRYPTSETUP)
 	cp $< $@
 	qemu-img resize $@ 10G
-	sudo ./resize-and-copy-in-qcow2 $@ $(DEBS) $(ACI_FILES) $(SCRIPT_DIR)
+	sudo ./resize-and-copy-in-qcow2 $@ $(DEBS) $(ACI_FILES) $(SCRIPT_DIR) $(CRYPTSETUP)
 
 preview-cloud: $(CUSTOM_CLOUD_PATH)
 	rm -f $(PREVIEW_IMG) $(LOCALDS_IMG)
@@ -154,6 +163,7 @@ clean:
 	rm -rf $(CUSTOM_ISO_PATH) \
 		$(CUSTOM_CLOUD_PATH) \
 		$(ETCDPASSWD_DEB_PATH) \
+		$(CRYPTSETUP) \
 		$(SRC_DIR_PATH) $(PREVIEW_IMG) $(LOCALDS_IMG)
 
 fullclean: clean
