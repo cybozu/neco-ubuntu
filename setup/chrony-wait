@@ -7,4 +7,10 @@ while true; do
     fi
 done
 
+while true; do
+    if rkt enter --app=chrony $uuid /bin/true 2>/dev/null; then break; fi
+    echo "chrony-wait: retrying..."
+    sleep 1
+done
+
 exec rkt enter --app=chrony $uuid chronyc waitsync 600 0.1 0.0 1
