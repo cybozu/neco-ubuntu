@@ -7,7 +7,7 @@ fi
 
 bmc=$1; shift
 
-vm=`systemd-detect-virt -v`
+vm=$(systemd-detect-virt -v)
 
 if [ "$vm" != "none" ]; then
   # notify BMC address to placemat
