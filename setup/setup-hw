@@ -11,5 +11,5 @@ vm=$(systemd-detect-virt -v)
 
 if [ "$vm" != "none" ]; then
   # notify BMC address to placemat
-  echo $bmc > /dev/ttyS1
+  echo $bmc > /dev/virtio-ports/placemat
 fi
