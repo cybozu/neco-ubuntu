@@ -82,13 +82,11 @@ etcdpasswd/Makefile:
 	@echo "    ln -s /path/to/your/etcdpasswd ."
 	exit 1
 
-etcdpasswd/$(ETCDPASSWD_DEB_NAME): etcdpasswd/Makefile
+$(ETCDPASSWD_DEB_PATH): etcdpasswd/Makefile
 	cd etcdpasswd; $(MAKE) clean
 	cd etcdpasswd; $(MAKE) setup
 	cd etcdpasswd; $(MAKE) deb
-
-$(ETCDPASSWD_DEB_PATH): etcdpasswd/$(ETCDPASSWD_DEB_NAME)
-	mv $< $@
+	mv etcdpasswd/$(ETCDPASSWD_DEB_NAME) $@
 
 $(DOCKER2ACI):
 	cd $(BUILD_DIR); $(CURL) $(DOCKER2ACI_URL) | tar -x -z -f - --strip-components=1
