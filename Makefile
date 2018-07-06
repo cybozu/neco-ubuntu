@@ -17,14 +17,13 @@ ORIGINAL_CLOUD_URL=https://cloud-images.ubuntu.com/releases/18.04/release/$(ORIG
 ORIGINAL_CLOUD_PATH=$(BUILD_DIR)/$(ORIGINAL_CLOUD_IMAGE)
 CUSTOM_CLOUD_PATH=$(BUILD_DIR)/cybozu-$(ORIGINAL_CLOUD_IMAGE)
 
-RKT_DEB_NAME=rkt_1.30.0-1_amd64.deb
-RKT_DEB_URL=https://github.com/rkt/rkt/releases/download/v1.30.0/$(RKT_DEB_NAME)
-RKT_DEB_PATH=build/$(RKT_DEB_NAME)
+ATOMIC_URL=https://storage.googleapis.com/neco-public/neco-atomic.tar
+ATOMIC_PATH=$(BUILD_DIR)/neco-atomic.tar
 
 ETCDPASSWD_DEB_NAME=etcdpasswd_0.1-1_amd64.deb
 ETCDPASSWD_DEB_PATH=build/$(ETCDPASSWD_DEB_NAME)
 
-DEBS=$(RKT_DEB_PATH) $(ETCDPASSWD_DEB_PATH)
+DEBS=$(ETCDPASSWD_DEB_PATH)
 
 DOCKER2ACI_URL=https://github.com/appc/docker2aci/releases/download/v0.17.2/docker2aci-v0.17.2.tar.gz
 DOCKER2ACI=$(BUILD_DIR)/docker2aci
@@ -43,7 +42,7 @@ CONTAINERS:=\
 	sabakan:0
 
 ACI_FILES=$(patsubst %,build/cybozu-%.aci,$(subst :,-,$(CONTAINERS)))
-ARTIFACTS=$(ORIGINAL_ISO_PATH) $(ORIGINAL_CLOUD_PATH) $(RKT_DEB_PATH) $(DOCKER2ACI)
+ARTIFACTS=$(ORIGINAL_ISO_PATH) $(ORIGINAL_CLOUD_PATH) $(DOCKER2ACI)
 PREVIEW_IMG=$(BUILD_DIR)/ubuntu.img
 LOCALDS_IMG=$(BUILD_DIR)/seed.img
 CURL=curl -fSL
@@ -74,8 +73,8 @@ $(ORIGINAL_ISO_PATH):
 $(ORIGINAL_CLOUD_PATH):
 	$(CURL) -o $@ $(ORIGINAL_CLOUD_URL)
 
-$(RKT_DEB_PATH):
-	$(CURL) -o $@ $(RKT_DEB_URL)
+$(ATOMIC_PATH):
+	$(CURL) -o $@ $(ATOMIC_URL)
 
 etcdpasswd/Makefile:
 	@echo "prepare etcdpasswd directory by creating symlink to your repository"
@@ -95,7 +94,7 @@ $(DOCKER2ACI):
 	cd $(BUILD_DIR); ./docker2aci $$(echo $@ | sed -r 's,build/cybozu-(.*)-([^-]+).aci,docker://quay.io/cybozu/\1:\2,')
 	chmod 644 $@
 
-$(CUSTOM_ISO_PATH): $(ORIGINAL_ISO_PATH) $(DEBS) $(ACI_FILES) $(CLUSTER_JSON)
+$(CUSTOM_ISO_PATH): $(ORIGINAL_ISO_PATH) $(DEBS) $(ACI_FILES) $(CLUSTER_JSON) $(ATOMIC_PATH)
 	rm -rf $(SRC_DIR_PATH)
 	mkdir -p $(SRC_DIR_PATH)
 	xorriso -osirrox on -indev $(ORIGINAL_ISO_PATH) \
@@ -111,8 +110,10 @@ $(CUSTOM_ISO_PATH): $(ORIGINAL_ISO_PATH) $(DEBS) $(ACI_FILES) $(CLUSTER_JSON)
 	# Add container runtimes
 	mkdir -p $(SRC_DIR_PATH)/pool/extras
 	cp $(DEBS) $(SRC_DIR_PATH)/pool/extras/
+	tar -C $(SRC_DIR_PATH)/pool/extras/ -xf $(ATOMIC_PATH)
 	cp $(ACI_FILES) $(SRC_DIR_PATH)/pool/extras/
 	cp -r $(SCRIPT_DIR) $(SRC_DIR_PATH)/pool/extras/
+
 
 	# Build an ISO file
 	xorriso -as mkisofs -r -V "Custom Ubuntu Install CD" \
@@ -132,10 +133,13 @@ preview-iso: $(CUSTOM_ISO_PATH)
 		-drive file=$(PREVIEW_IMG) \
 		-drive file=$(CUSTOM_ISO_PATH),media=cdrom
 
-$(CUSTOM_CLOUD_PATH): $(ORIGINAL_CLOUD_PATH) $(DEBS) $(ACI_FILES) $(CLUSTER_JSON)
+$(CUSTOM_CLOUD_PATH): $(ORIGINAL_CLOUD_PATH) $(DEBS) $(ACI_FILES) $(CLUSTER_JSON) $(ATOMIC_PATH)
 	cp $< $@
 	qemu-img resize $@ 10G
-	sudo ./resize-and-copy-in-qcow2 $@ $(DEBS) $(ACI_FILES) $(SCRIPT_DIR)
+	rm -rf /tmp/neco-atomic
+	mkdir -p /tmp/neco-atomic
+	tar -C /tmp/neco-atomic -xf $(ATOMIC_PATH)
+	sudo ./resize-and-copy-in-qcow2 $@ $(DEBS) $(ACI_FILES) $(SCRIPT_DIR) /tmp/neco-atomic/*.deb
 
 preview-cloud: $(CUSTOM_CLOUD_PATH)
 	rm -f $(PREVIEW_IMG) $(LOCALDS_IMG)
