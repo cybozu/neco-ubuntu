@@ -21,8 +21,8 @@ RKT_DEB_NAME=rkt_1.30.0-1_amd64.deb
 RKT_DEB_URL=https://github.com/rkt/rkt/releases/download/v1.30.0/$(RKT_DEB_NAME)
 RKT_DEB_PATH=build/$(RKT_DEB_NAME)
 
-ETCDPASSWD_DEB_NAME=etcdpasswd_0.1-1_amd64.deb
-ETCDPASSWD_DEB_PATH=build/$(ETCDPASSWD_DEB_NAME)
+ETCDPASSWD_VERSION=0.3
+ETCDPASSWD_DEB_PATH=build/etcdpasswd_$(ETCDPASSWD_VERSION)-1_amd64.deb
 
 DEBS=$(RKT_DEB_PATH) $(ETCDPASSWD_DEB_PATH)
 
@@ -77,16 +77,8 @@ $(ORIGINAL_CLOUD_PATH):
 $(RKT_DEB_PATH):
 	$(CURL) -o $@ $(RKT_DEB_URL)
 
-etcdpasswd/Makefile:
-	@echo "prepare etcdpasswd directory by creating symlink to your repository"
-	@echo "    ln -s /path/to/your/etcdpasswd ."
-	exit 1
-
-$(ETCDPASSWD_DEB_PATH): etcdpasswd/Makefile
-	cd etcdpasswd; $(MAKE) clean
-	cd etcdpasswd; $(MAKE) setup
-	cd etcdpasswd; $(MAKE) deb
-	mv etcdpasswd/$(ETCDPASSWD_DEB_NAME) $@
+$(ETCDPASSWD_DEB_PATH):
+	$(CURL) -o $@ https://github.com/cybozu-go/etcdpasswd/releases/download/v$(ETCDPASSWD_VERSION)/$(notdir $@)
 
 $(DOCKER2ACI):
 	cd $(BUILD_DIR); $(CURL) $(DOCKER2ACI_URL) | tar -x -z -f - --strip-components=1
