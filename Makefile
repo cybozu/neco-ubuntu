@@ -7,7 +7,7 @@ SRC_DIR_PATH:=$(BUILD_DIR)/src
 
 CLUSTER_JSON:=$(SCRIPT_DIR)/cluster.json
 
-ORIGINAL_ISO_NAME=ubuntu-18.04-server-amd64.iso
+ORIGINAL_ISO_NAME=ubuntu-18.04.1-server-amd64.iso
 ORIGINAL_ISO_URL=http://cdimage.ubuntu.com/releases/18.04/release/$(ORIGINAL_ISO_NAME)
 ORIGINAL_ISO_PATH=$(BUILD_DIR)/$(ORIGINAL_ISO_NAME)
 CUSTOM_ISO_PATH=$(BUILD_DIR)/cybozu-$(ORIGINAL_ISO_NAME)
