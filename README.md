@@ -27,15 +27,6 @@ Build
     This file will be read by `setup-neco-network`.
     An example of the file is available at `setup/cluster.json.example`.
 
-1. Prepare [etcdpasswd][] repository.
-
-    You may create a symlink to an existing `etcdpasswd` directory, or
-    clone it as follows:
-
-    ```console
-    $ git clone https://github.com/cybozu-go/etcdpasswd
-    ```
-
 1. Run `make` to see available build options.
 1. Run `make setup`.  This is a one-time procedure.
 1. Run `make all` to build everything.
