@@ -92,15 +92,14 @@ def setup_etcd(lrn: int, racks: [int]):
 
 def setup_sabakan(lrn: int, racks: [int], password: str):
     subprocess.run([
-        "tar", "-C", "/usr/local/bin",
-        "-x", "-f", "/extras/cybozu-sabakan-0.aci",
-        "--strip-components", "5",
-        "rootfs/usr/local/sabakan/bin/sabactl"], check=True)
-    subprocess.run([
-        "tar", "-C", "/etc/bash_completion.d/",
-        "-x", "-f", "/extras/cybozu-sabakan-0.aci",
-        "--strip-components", "4", "--transform", "s/sabactl_completion.bash/sabactl/",
-        "rootfs/usr/local/sabakan/sabactl_completion.bash"], check=True)
+        "rkt", "run",
+        "--volume=host-usr-local-bin,kind=host,source=/usr/local/bin,readOnly=false",
+        "--mount=volume=host-usr-local-bin,target=/host/usr/local/bin",
+        "--volume=host-etc-bash-completion-d,kind=host,source=/etc/bash_completion.d,readOnly=false",
+        "--mount=volume=host-etc-bash-completion-d,target=/host/etc/bash_completion.d",
+        "quay.io/cybozu/sabakan:0",
+        "--user=0",
+        "--exec=/usr/local/sabakan/install-tools"], check=True)
 
     prepare_sabakan_data_dir()
     with open(SABAKANCONF_TMPL) as f:

@@ -18,9 +18,16 @@ def setup_utils():
     print("copied podenter")
 
 
+def rkt_fetch():
+    for aci in glob.glob("/extras/*.aci"):
+        print("rkt fetch", aci)
+        subprocess.run(["rkt", "--insecure-options=image", "fetch", aci], check=True)
+
+
 def main():
     setup_rkt()
     setup_utils()
+    rkt_fetch()
 
 
 if __name__ == '__main__':
