@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import argparse
-import glob
 import ipaddress
 import json
 import os
@@ -274,12 +273,6 @@ def configure(rack: int, c: Cluster):
     setup_hardware(bmc)
 
 
-def rkt_fetch():
-    for aci in glob.glob("/extras/*.aci"):
-        print("rkt fetch", aci)
-        subprocess.run(["rkt", "--insecure-options=image", "fetch", aci], check=True)
-
-
 def main():
     parser = argparse.ArgumentParser(description='Setup network script')
     parser.add_argument('-c', '--cluster', help='cluster name')
@@ -296,7 +289,6 @@ def main():
     clusters = load_clusters('cluster.json')
     c = ask_cluster(clusters, args.cluster)
 
-    rkt_fetch()
     configure(rack, c)
 
 
