@@ -15,6 +15,7 @@ NODE_MASK = 26
 
 RACK_INFORMATION = '/etc/neco/rack'
 CLUSTER_INFORMATION = '/etc/neco/cluster'
+CLUSTER_JSON = '/etc/neco/cluster.json'
 
 VM = subprocess.run(['systemd-detect-virt', '-v'], stdout=subprocess.DEVNULL).returncode == 0
 ETH0 = 'ens3' if VM else 'eno1'
@@ -22,10 +23,9 @@ ETH1 = 'ens4' if VM else 'eno2'
 
 
 class Cluster:
-    def __init__(self, name: str, bastion_network: str, bmc_network: str, ntp_servers: [str]):
+    def __init__(self, name: str, bastion_network: str, bmc_network: str, ntp_servers: [str], idrac_passwords=[]: [dict]):
         self._name = name
         self._bastion_network = ipaddress.IPv4Address(bastion_network)
-        self._bmc_network = ipaddress.IPv4Address(bmc_network)
         if not isinstance(ntp_servers, list):
             raise TypeError('ntp_servers must be a list')
         self._ntp_servers = ntp_servers
@@ -37,10 +37,6 @@ class Cluster:
     @property
     def bastion_network(self) ->ipaddress.IPv4Address:
         return self._bastion_network
-
-    @property
-    def bmc_network(self) ->ipaddress.IPv4Address:
-        return self._bmc_network
 
     @property
     def ntp_servers(self) ->[str]:
@@ -92,6 +88,11 @@ def dump_cluster_information(c: Cluster):
     write_file(CLUSTER_INFORMATION, c.name + "\n")
 
 
+def copy_cluster_information():
+    os.makedirs('/etc/neco', 0o755, exist_ok=True)
+    shutil.copyfile('cluster.json', CLUSTER_JSON)
+
+
 def systemctl(*args):
     cmd = ["systemctl"]
     cmd.extend(args)
@@ -113,10 +114,6 @@ def node_addresses(rack: int) -> [ipaddress.IPv4Address]:
 
 def bastion_address(rack: int, c: Cluster):
     return c.bastion_network + rack
-
-
-def bmc_addresses(rack: int, c: Cluster) -> ipaddress.IPv4Address:
-    return c.bmc_network + 32 * rack + 3
 
 
 def wait_devs(*devs):
@@ -242,17 +239,11 @@ def enable_networkd():
     print("purged netplan, enabled systemd-networkd")
 
 
-def setup_hardware(bmc: ipaddress.IPv4Address):
-    d = os.path.dirname(os.path.abspath(__file__))
-    subprocess.run([os.path.join(d, "setup-hw"), str(bmc)], check=True)
-
-
 def configure(rack: int, c: Cluster):
     node0, node1, node2 = node_addresses(rack)
     tor1 = ipaddress.IPv4Network((node1, NODE_MASK), strict=False).network_address + 1
     tor2 = ipaddress.IPv4Network((node2, NODE_MASK), strict=False).network_address + 1
     bastion = bastion_address(rack, c)
-    bmc = bmc_addresses(rack, c)
 
     write_dummy_networkd("node0", node0)
     write_link_networkd(ETH0, node1)
@@ -269,8 +260,6 @@ def configure(rack: int, c: Cluster):
 
     dump_rack_information(rack)
     dump_cluster_information(c)
-
-    setup_hardware(bmc)
 
 
 def main():

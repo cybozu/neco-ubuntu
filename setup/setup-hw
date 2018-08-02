@@ -1,15 +1,84 @@
-#!/bin/sh
+#!/usr/bin/python3
 
-if [ $# -ne 1 ]; then
-  echo "Usage: setup-hw <bmc-address>" 1>&2
-  exit 1
-fi
+import subprocess
 
-bmc=$1; shift
+RACK_INFORMATION = '/etc/neco/rack'
+CLUSTER_JSON = '/etc/neco/cluster.json'
 
-vm=$(systemd-detect-virt -v)
+PLACEMAT_PARAM_DEVICE = '/dev/virtio-ports/placemat'
 
-if [ "$vm" != "none" ]; then
-  # notify BMC address to placemat
-  echo $bmc > /dev/virtio-ports/placemat
-fi
+BMC_NETMASK = '255.255.240.0'
+
+VM = subprocess.run(['systemd-detect-virt', '-v'], stdout=subprocess.DEVNULL).returncode == 0
+
+
+class Cluster:
+    def __init__(self, name: str, bastion_network: str, bmc_network: str, ntp_servers: [str], idrac_passwords=[]: [dict]):
+        self._bmc_network = ipaddress.IPv4Address(bmc_network)
+        if not isinstance(idrac_passwords, list):
+            raise TypeError('idrac_passwords must be a list')
+        self._idrac_passwords = idrac_passwords
+
+    @property
+    def bmc_network(self) ->ipaddress.IPv4Address:
+        return self._bmc_network
+
+    @property
+    def idrac_passwords(self) ->[dict]:
+        return self._idrac_passwords
+
+    @property
+    def idrac_password(self, username: str) ->(str, str):
+        for p in self.idrac_passwords():
+            if p["user"] == username:
+                return (p["hash"], p["salt"])
+
+
+def load_clusters(filename: str) ->[Cluster]:
+    with open(filename) as f:
+        j = json.load(f)
+    if not isinstance(j, list):
+        raise TypeError('invalid contents in ' + filename)
+    return [Cluster(**d) for d in j]
+
+
+def load_rack(filename: str) ->int:
+    with open(filename) as f:
+        return int(f.read())
+
+
+def bmc_address(rack: int, c: Cluster) -> ipaddress.IPv4Address:
+    return c.bmc_network + 32 * rack + 3
+
+
+def main():
+    clusters = load_cluster(CLUSTER_JSON)
+    rack = load_rack(RACK_INFORMATION)
+    bmc = bmc_address(rack, clusters)
+
+    if VM:
+        with open(PLACEMAT_PARAM_DEVICE, mode='w') as f:
+            f.write(bmc+'\n')
+        return
+
+    bmc_gw = ipaddress.IPv4Address(int(bmc) & int(ipaddress.IPv4Address(BMC_NETMASK)))
+    root_password = clusters.idrac_password("root")
+    cybozu_password = clusters.idrac_password("cybozu")
+    support_password = clusters.idrac_password("support")
+    cmd = ["podenter", "omsa", "/opt/sbin/setup-hw", "--",
+           "--ome-ip", str(bmc),
+           "--rac-name", "rack{}-boot-idrac".format(rack),
+           "--idrac-ip", str(bmc),
+           "--idrac-netmask", BMC_NETMASK,
+           "--gateway-ip", str(bmc_gw),
+           "--root-hash", root_password[0],
+           "--root-salt", root_password[1],
+           "--cybozu-hash", cybozu_password[0],
+           "--cybozu-salt", cybozu_password[1],
+           "--cybozu-ssh-keys", "/dev/null",
+           "--support-hash", support_password[0],
+           "--support-salt", support_password[1]]
+    subprocess.run(cmd, check=True)
+
+if __name__ == '__main__':
+    main()
