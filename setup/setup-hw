@@ -19,7 +19,7 @@ VM = subprocess.run(['systemd-detect-virt', '-v'], stdout=subprocess.DEVNULL).re
 
 
 class Cluster:
-    def __init__(self, name: str, bastion_network: str, bmc_network: str, ntp_servers: [str], idrac_passwords=[]: [dict]):
+    def __init__(self, name: str, bastion_network: str, bmc_network: str, ntp_servers: [str], idrac_passwords: [dict] = []):
         self._name = name
         self._bmc_network = ipaddress.IPv4Address(bmc_network)
         if not isinstance(idrac_passwords, list):
@@ -38,11 +38,11 @@ class Cluster:
     def idrac_passwords(self) ->[dict]:
         return self._idrac_passwords
 
-    @property
     def idrac_password(self, username: str) ->(str, str):
-        for p in self.idrac_passwords():
+        for p in self.idrac_passwords:
             if p["user"] == username:
                 return (p["hash"], p["salt"])
+        raise RuntimeError('no such user: {}'.format(username))
 
 
 def load_clusters(filename: str) ->[Cluster]:
@@ -59,6 +59,7 @@ def my_cluster(clusters: [Cluster], filename: str) ->Cluster:
     for c in clusters:
         if c.name == name:
             return c
+    raise RuntimeError('no such cluster: {}'.format(name))
 
 
 def load_rack(filename: str) ->int:
@@ -71,28 +72,28 @@ def bmc_address(rack: int, c: Cluster) -> ipaddress.IPv4Address:
 
 
 def main():
-    clusters = load_cluster(CLUSTER_JSON)
+    clusters = load_clusters(CLUSTER_JSON)
     cluster = my_cluster(clusters, CLUSTER_INFORMATION)
     rack = load_rack(RACK_INFORMATION)
     bmc = bmc_address(rack, cluster)
 
     if VM:
         with open(PLACEMAT_PARAM_DEVICE, mode='w') as f:
-            f.write(bmc+'\n')
+            f.write(str(bmc)+'\n')
         return
 
     while True:
         cmd = ["podenter", "omsa", "idracadm7", "get", "iDRAC.Info.Name"]
         p = subprocess.run(cmd, check=True, stdout=subprocess.PIPE)
-        if 'Name=iDRAC' in p.stdout:
+        if 'Name=iDRAC' in p.stdout.decode():
             break
-        sys.stdout.write("setup-hw: retrying...")
+        print("setup-hw: retrying...", file=sys.stderr)
         time.sleep(1)
 
     cmd = ["podenter", "omsa", "idracadm7", "jobqueue", "view"]
     p = subprocess.run(cmd, check=True, stdout=subprocess.PIPE)
-    if 'Status=Scheduled' in p.stdout:
-        sys.stdout.write('Current Jobs are queued')
+    if 'Status=Scheduled' in p.stdout.decode():
+        print('Current Jobs are queued', file=sys.stderr)
         sys.exit(1)
 
     bmc_gw = ipaddress.IPv4Address(int(bmc) & int(ipaddress.IPv4Address(BMC_NETMASK)) + 1)
@@ -116,8 +117,8 @@ def main():
 
     cmd = ["podenter", "omsa", "idracadm7", "jobqueue", "view"]
     p = subprocess.run(cmd, check=True, stdout=subprocess.PIPE)
-    if 'Status=Scheduled' in p.stdout:
-        sys.stdout.write('Setup succeeded, machine will reboot')
+    if 'Status=Scheduled' in p.stdout.decode():
+        print('Setup succeeded, machine will reboot', file=sys.stderr)
         subprocess.run(["reboot"], check=True)
         time.sleep(1000)
 
