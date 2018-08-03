@@ -84,7 +84,7 @@ def main():
 
     while True:
         cmd = ["podenter", "omsa", "idracadm7", "get", "iDRAC.Info.Name"]
-        p = subprocess.run(cmd, check=True, stdout=subprocess.PIPE)
+        p = subprocess.run(cmd, stdout=subprocess.PIPE)  # ignore error
         if 'Name=iDRAC' in p.stdout.decode():
             break
         print("setup-hw: retrying...", file=sys.stderr)

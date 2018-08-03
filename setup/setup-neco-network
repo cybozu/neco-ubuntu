@@ -260,6 +260,7 @@ def configure(rack: int, c: Cluster):
 
     dump_rack_information(rack)
     dump_cluster_information(c)
+    copy_cluster_information()
 
 
 def main():

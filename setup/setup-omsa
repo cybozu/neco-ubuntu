@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import os
 import shutil
 import subprocess
 
@@ -14,6 +15,7 @@ def main():
     shutil.copyfile("/extras/setup/omsa.service", "/etc/systemd/system/omsa.service")
     shutil.copyfile("/extras/setup/setup-hw.service", "/etc/systemd/system/setup-hw.service")
     shutil.copyfile("/extras/setup/setup-hw", "/usr/local/sbin/setup-hw")
+    os.chmod("/usr/local/sbin/setup-hw", 0o755)
 
     systemctl("daemon-reload")
     systemctl("start", "setup-hw.service")
