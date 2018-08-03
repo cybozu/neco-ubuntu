@@ -1,8 +1,14 @@
 #!/usr/bin/python3
 
+import ipaddress
+import json
 import subprocess
+import sys
+import time
+
 
 RACK_INFORMATION = '/etc/neco/rack'
+CLUSTER_INFORMATION = '/etc/neco/cluster'
 CLUSTER_JSON = '/etc/neco/cluster.json'
 
 PLACEMAT_PARAM_DEVICE = '/dev/virtio-ports/placemat'
@@ -14,10 +20,15 @@ VM = subprocess.run(['systemd-detect-virt', '-v'], stdout=subprocess.DEVNULL).re
 
 class Cluster:
     def __init__(self, name: str, bastion_network: str, bmc_network: str, ntp_servers: [str], idrac_passwords=[]: [dict]):
+        self._name = name
         self._bmc_network = ipaddress.IPv4Address(bmc_network)
         if not isinstance(idrac_passwords, list):
             raise TypeError('idrac_passwords must be a list')
         self._idrac_passwords = idrac_passwords
+
+    @property
+    def name(self) ->str:
+        return self._name
 
     @property
     def bmc_network(self) ->ipaddress.IPv4Address:
@@ -42,6 +53,14 @@ def load_clusters(filename: str) ->[Cluster]:
     return [Cluster(**d) for d in j]
 
 
+def my_cluster(clusters: [Cluster], filename: str) ->Cluster:
+    with open(filename) as f:
+        name = f.read().strip()
+    for c in clusters:
+        if c.name == name:
+            return c
+
+
 def load_rack(filename: str) ->int:
     with open(filename) as f:
         return int(f.read())
@@ -53,18 +72,33 @@ def bmc_address(rack: int, c: Cluster) -> ipaddress.IPv4Address:
 
 def main():
     clusters = load_cluster(CLUSTER_JSON)
+    cluster = my_cluster(clusters, CLUSTER_INFORMATION)
     rack = load_rack(RACK_INFORMATION)
-    bmc = bmc_address(rack, clusters)
+    bmc = bmc_address(rack, cluster)
 
     if VM:
         with open(PLACEMAT_PARAM_DEVICE, mode='w') as f:
             f.write(bmc+'\n')
         return
 
-    bmc_gw = ipaddress.IPv4Address(int(bmc) & int(ipaddress.IPv4Address(BMC_NETMASK)))
-    root_password = clusters.idrac_password("root")
-    cybozu_password = clusters.idrac_password("cybozu")
-    support_password = clusters.idrac_password("support")
+    while True:
+        cmd = ["podenter", "omsa", "idracadm7", "get", "iDRAC.Info.Name"]
+        p = subprocess.run(cmd, check=True, stdout=subprocess.PIPE)
+        if 'Name=iDRAC' in p.stdout:
+            break
+        sys.stdout.write("setup-hw: retrying...")
+        time.sleep(1)
+
+    cmd = ["podenter", "omsa", "idracadm7", "jobqueue", "view"]
+    p = subprocess.run(cmd, check=True, stdout=subprocess.PIPE)
+    if 'Status=Scheduled' in p.stdout:
+        sys.stdout.write('Current Jobs are queued')
+        sys.exit(1)
+
+    bmc_gw = ipaddress.IPv4Address(int(bmc) & int(ipaddress.IPv4Address(BMC_NETMASK)) + 1)
+    root_password = cluster.idrac_password("root")
+    cybozu_password = cluster.idrac_password("cybozu")
+    support_password = cluster.idrac_password("support")
     cmd = ["podenter", "omsa", "/opt/sbin/setup-hw", "--",
            "--ome-ip", str(bmc),
            "--rac-name", "rack{}-boot-idrac".format(rack),
@@ -79,6 +113,13 @@ def main():
            "--support-hash", support_password[0],
            "--support-salt", support_password[1]]
     subprocess.run(cmd, check=True)
+
+    cmd = ["podenter", "omsa", "idracadm7", "jobqueue", "view"]
+    p = subprocess.run(cmd, check=True, stdout=subprocess.PIPE)
+    if 'Status=Scheduled' in p.stdout:
+        sys.stdout.write('Setup succeeded, machine will reboot')
+        subprocess.run(["reboot"], check=True)
+        time.sleep(1000)
 
 if __name__ == '__main__':
     main()

@@ -1,0 +1,23 @@
+#!/usr/bin/python3
+
+import shutil
+import subprocess
+
+
+def systemctl(*args):
+    cmd = ["systemctl"]
+    cmd.extend(args)
+    subprocess.run(cmd, check=True)
+
+
+def main():
+    shutil.copyfile("/extras/setup/omsa.service", "/etc/systemd/system/omsa.service")
+    shutil.copyfile("/extras/setup/setup-hw.service", "/etc/systemd/system/setup-hw.service")
+    shutil.copyfile("/extras/setup/setup-hw", "/usr/local/sbin/setup-hw")
+
+    systemctl("daemon-reload")
+    systemctl("start", "setup-hw.service")
+
+
+if __name__ == '__main__':
+    main()
