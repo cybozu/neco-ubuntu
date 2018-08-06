@@ -257,7 +257,7 @@ def configure_chrony(c: Cluster):
 
 def enable_networkd():
     subprocess.run(["apt-get", "-y", "purge", "netplan.io"], check=True)
-    shutil.rmtree("/etc/netplan")
+    shutil.rmtree("/etc/netplan", ignore_errors=True)
     systemctl("enable", "systemd-networkd")  # by default, it is disabled.
     systemctl("restart", "systemd-networkd")
     print("purged netplan, enabled systemd-networkd")
