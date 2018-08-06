@@ -8,9 +8,8 @@ import time
 
 
 RACK_INFORMATION = '/etc/neco/rack'
-CLUSTER_INFORMATION = '/etc/neco/cluster'
-CLUSTER_JSON = '/etc/neco/cluster.json'
-
+BMC_ADDRESS = '/etc/neco/bmc_address'
+BMC_USER_INFO = '/etc/neco/bmc_user.json'
 PLACEMAT_PARAM_DEVICE = '/dev/virtio-ports/placemat'
 
 BMC_NETMASK = '255.255.240.0'
@@ -18,48 +17,12 @@ BMC_NETMASK = '255.255.240.0'
 VM = subprocess.run(['systemd-detect-virt', '-v'], stdout=subprocess.DEVNULL).returncode == 0
 
 
-class Cluster:
-    def __init__(self, name: str, bmc_network: str, idrac_passwords: [dict], **_unused):
-        self._name = name
-        self._bmc_network = ipaddress.IPv4Address(bmc_network)
-        if not (idrac_passwords is None or isinstance(idrac_passwords, list)):
-            raise TypeError('idrac_passwords must be a list')
-        self._idrac_passwords = [] if idrac_passwords is None else idrac_passwords
-
-    @property
-    def name(self) ->str:
-        return self._name
-
-    @property
-    def bmc_network(self) ->ipaddress.IPv4Address:
-        return self._bmc_network
-
-    @property
-    def idrac_passwords(self) ->[dict]:
-        return self._idrac_passwords
-
-    def idrac_password(self, username: str) ->(str, str):
-        for p in self.idrac_passwords:
-            if p["user"] == username:
-                return (p["hash"], p["salt"])
-        raise RuntimeError('no such user: {}'.format(username))
-
-
-def load_clusters(filename: str) ->[Cluster]:
+def load_user(filename: str) -> dict:
     with open(filename) as f:
         j = json.load(f)
     if not isinstance(j, list):
         raise TypeError('invalid contents in ' + filename)
-    return [Cluster(**d) for d in j]
-
-
-def my_cluster(clusters: [Cluster], filename: str) ->Cluster:
-    with open(filename) as f:
-        name = f.read().strip()
-    for c in clusters:
-        if c.name == name:
-            return c
-    raise RuntimeError('no such cluster: {}'.format(name))
+    return {d["user"]: (d["hash"], d["salt"]) for d in j}
 
 
 def load_rack(filename: str) ->int:
@@ -67,15 +30,15 @@ def load_rack(filename: str) ->int:
         return int(f.read())
 
 
-def bmc_address(rack: int, c: Cluster) -> ipaddress.IPv4Address:
-    return c.bmc_network + 32 * rack + 3
+def load_bmc_address(filename: str) -> ipaddress.IPv4Address:
+    with open(filename) as f:
+        return ipaddress.IPv4Address(f.read().strip())
 
 
 def main():
-    clusters = load_clusters(CLUSTER_JSON)
-    cluster = my_cluster(clusters, CLUSTER_INFORMATION)
+    user_dict = load_user(BMC_USER_INFO)
     rack = load_rack(RACK_INFORMATION)
-    bmc = bmc_address(rack, cluster)
+    bmc = load_bmc_address(BMC_ADDRESS)
 
     if VM:
         with open(PLACEMAT_PARAM_DEVICE, mode='w') as f:
@@ -97,9 +60,9 @@ def main():
         sys.exit(1)
 
     bmc_gw = ipaddress.IPv4Address(int(bmc) & int(ipaddress.IPv4Address(BMC_NETMASK)) + 1)
-    root_password = cluster.idrac_password("root")
-    cybozu_password = cluster.idrac_password("cybozu")
-    support_password = cluster.idrac_password("support")
+    root_password = user_dict["root"]
+    cybozu_password = user_dict["cybozu"]
+    support_password = user_dict["support"]
     cmd = ["podenter", "omsa", "/opt/sbin/setup-hw", "--",
            "--ome-ip", str(bmc),
            "--rac-name", "rack{}-boot-idrac".format(rack),
