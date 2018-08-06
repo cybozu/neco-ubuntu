@@ -15,7 +15,8 @@ NODE_MASK = 26
 
 RACK_INFORMATION = '/etc/neco/rack'
 CLUSTER_INFORMATION = '/etc/neco/cluster'
-CLUSTER_JSON = '/etc/neco/cluster.json'
+BMC_ADDRESS = '/etc/neco/bmc_address'
+BMC_USER_INFO = '/etc/neco/bmc_user.json'
 
 VM = subprocess.run(['systemd-detect-virt', '-v'], stdout=subprocess.DEVNULL).returncode == 0
 ETH0 = 'ens3' if VM else 'eno1'
@@ -23,12 +24,18 @@ ETH1 = 'ens4' if VM else 'eno2'
 
 
 class Cluster:
-    def __init__(self, name: str, bastion_network: str, ntp_servers: [str], **_unused):
+    # pylint: disable=too-many-arguments
+    def __init__(self, name: str, bastion_network: str, ntp_servers: [str],
+                 bmc_network: str, idrac_passwords: [dict] = None):
         self._name = name
         self._bastion_network = ipaddress.IPv4Address(bastion_network)
         if not isinstance(ntp_servers, list):
             raise TypeError('ntp_servers must be a list')
         self._ntp_servers = ntp_servers
+        self._bmc_network = ipaddress.IPv4Address(bmc_network)
+        if not (idrac_passwords is None or isinstance(idrac_passwords, list)):
+            raise TypeError('idrac_passwords must be a list')
+        self._idrac_passwords = [] if idrac_passwords is None else idrac_passwords
 
     @property
     def name(self) ->str:
@@ -41,6 +48,14 @@ class Cluster:
     @property
     def ntp_servers(self) ->[str]:
         return self._ntp_servers
+
+    @property
+    def bmc_network(self) ->ipaddress.IPv4Address:
+        return self._bmc_network
+
+    @property
+    def idrac_passwords(self) ->[dict]:
+        return self._idrac_passwords
 
 
 def load_clusters(filename: str) ->[Cluster]:
@@ -88,9 +103,14 @@ def dump_cluster_information(c: Cluster):
     write_file(CLUSTER_INFORMATION, c.name + "\n")
 
 
-def copy_cluster_information():
+def dump_bmc_address(rack: int, c: Cluster):
     os.makedirs('/etc/neco', 0o755, exist_ok=True)
-    shutil.copyfile('cluster.json', CLUSTER_JSON)
+    write_file(BMC_ADDRESS, str(bmc_address(rack, c)) + "\n")
+
+
+def dump_bmc_user(c: Cluster):
+    os.makedirs('/etc/neco', 0o755, exist_ok=True)
+    write_file(BMC_USER_INFO, json.dumps(c.idrac_passwords) + "\n")
 
 
 def systemctl(*args):
@@ -114,6 +134,10 @@ def node_addresses(rack: int) -> [ipaddress.IPv4Address]:
 
 def bastion_address(rack: int, c: Cluster):
     return c.bastion_network + rack
+
+
+def bmc_address(rack: int, c: Cluster) -> ipaddress.IPv4Address:
+    return c.bmc_network + 32 * rack + 3
 
 
 def wait_devs(*devs):
@@ -260,7 +284,8 @@ def configure(rack: int, c: Cluster):
 
     dump_rack_information(rack)
     dump_cluster_information(c)
-    copy_cluster_information()
+    dump_bmc_address(rack, c)
+    dump_bmc_user(c)
 
 
 def main():
