@@ -23,7 +23,7 @@ ETH1 = 'ens4' if VM else 'eno2'
 
 
 class Cluster:
-    def __init__(self, name: str, bastion_network: str, ntp_servers: [str], **kwargs):
+    def __init__(self, name: str, bastion_network: str, ntp_servers: [str], **_unused):
         self._name = name
         self._bastion_network = ipaddress.IPv4Address(bastion_network)
         if not isinstance(ntp_servers, list):
