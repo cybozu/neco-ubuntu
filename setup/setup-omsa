@@ -13,12 +13,12 @@ def systemctl(*args):
 
 def main():
     shutil.copyfile("/extras/setup/omsa.service", "/etc/systemd/system/omsa.service")
-    shutil.copyfile("/extras/setup/setup-hw.service", "/etc/systemd/system/setup-hw.service")
     shutil.copyfile("/extras/setup/setup-hw", "/usr/local/sbin/setup-hw")
     os.chmod("/usr/local/sbin/setup-hw", 0o755)
 
     systemctl("daemon-reload")
-    systemctl("start", "setup-hw.service")
+    systemctl("enable", "omsa.service")
+    systemctl("start", "omsa.service")
 
 
 if __name__ == '__main__':
