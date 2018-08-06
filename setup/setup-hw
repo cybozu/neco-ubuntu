@@ -19,12 +19,12 @@ VM = subprocess.run(['systemd-detect-virt', '-v'], stdout=subprocess.DEVNULL).re
 
 
 class Cluster:
-    def __init__(self, name: str, bastion_network: str, bmc_network: str, ntp_servers: [str], idrac_passwords: [dict] = []):
+    def __init__(self, name: str, bmc_network: str, idrac_passwords: [dict], **kwargs):
         self._name = name
         self._bmc_network = ipaddress.IPv4Address(bmc_network)
-        if not isinstance(idrac_passwords, list):
+        if not (idrac_passwords is None or isinstance(idrac_passwords, list)):
             raise TypeError('idrac_passwords must be a list')
-        self._idrac_passwords = idrac_passwords
+        self._idrac_passwords = [] if idrac_passwords is None else idrac_passwords
 
     @property
     def name(self) ->str:
