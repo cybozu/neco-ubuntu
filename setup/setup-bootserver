@@ -137,7 +137,7 @@ def setup_etcd_backup(password: str):
 
 def setup_etcdpasswd(racks: [int], password: str):
     etcd_servers = ['http://{!s}:2379'.format(boot_node0_ip(lrn)) for lrn in racks]
-    tmpl = string.Template('''servers: ${etcd_servers}
+    tmpl = string.Template('''endpoints: ${etcd_servers}
 username: etcdpasswd
 password: ${password}
 ''')
