@@ -12,7 +12,7 @@ ExecStart=/bin/bash -c "/usr/bin/rkt run \
   --insecure-options=all \
   --volume modules,kind=host,source=/lib/modules/$(uname -r),readOnly=true \
   --volume dev,kind=host,source=/dev \
-  quay.io/cybozu/dell-omsa:v18.06.00-3 \
+  quay.io/cybozu/dell-omsa:v18.06.00-4 \
   --name omsa --user-label name=omsa \
   --mount volume=modules,target=/lib/modules/$(uname -r) \
   --mount volume=dev,target=/dev"
