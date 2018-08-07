@@ -9,7 +9,6 @@ import subprocess
 def pod_uuid(app: str) -> str:
     p = subprocess.run(['rkt', 'list', '--format=json'], stdout=subprocess.PIPE, check=True)
     j = json.loads(p.stdout)
-    # for unknown reason, "rkt list" sometimes returns null...
     if j is None:
         raise RuntimeError('rkt list is empty')
 
