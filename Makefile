@@ -31,8 +31,8 @@ DOCKER2ACI=$(BUILD_DIR)/docker2aci
 
 PYTHON3_FILES=$(shell find setup/ -type f | xargs awk '/python3/ {print FILENAME} {nextfile}')
 PYTHON3_DEPS:=pylint pycodestyle
-PYLINT3:=$(shell test -f /usr/local/bin/pylint && echo /usr/local/bin/pylint || echo $$HOME/.local/bin/pylint)
-PYCODESTYLE3:=$(shell test -f /usr/local/bin/pycodestyle && echo /usr/local/bin/pycodestyle || echo $$HOME/.local/bin/pycodestyle)
+PYLINT3:=$(shell which pylint || echo $$HOME/.local/bin/pylint)
+PYCODESTYLE3:=$(shell which pycodestyle || echo $$HOME/.local/bin/pycodestyle)
 
 BUILD_DEPS:=xorriso qemu-utils qemu-kvm ovmf curl ca-certificates cloud-image-utils gdisk kpartx python3-pip python3-setuptools
 CONTAINERS:=\
