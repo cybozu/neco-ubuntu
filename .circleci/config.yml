@@ -1,12 +1,15 @@
 version: 2
 jobs:
   build:
-    docker:
-      - image: quay.io/cybozu/golang:1.10-bionic
+    machine:
+        image: circleci/classic:201708-01
     steps:
       - run: apt-get update
       - run: apt-get install -y --no-install-recommends python3-pip python3-setuptools
       - run: pip3 install pylint pycodestyle
+      - run: apt-get install go
+      - run: export GOPATH=$HOME/go
+      - run: export PATH=$PATH:$GOPATH/bin
 
       - checkout
       - run: make lint
