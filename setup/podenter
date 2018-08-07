@@ -4,17 +4,13 @@ import argparse
 import json
 import os
 import subprocess
-import time
 
 
 def pod_uuid(app: str) -> str:
-    while True:
-        p = subprocess.run(['rkt', 'list', '--format=json'], stdout=subprocess.PIPE, check=True)
-        j = json.loads(p.stdout)
-        # for unknown reason, "rkt list" sometimes returns null...
-        if j is not None:
-            break
-        time.sleep(1)
+    p = subprocess.run(['rkt', 'list', '--format=json'], stdout=subprocess.PIPE, check=True)
+    j = json.loads(p.stdout)
+    if j is None:
+        raise RuntimeError('rkt list is empty')
 
     for d in j:
         if 'app_names' not in d:
@@ -31,7 +27,7 @@ def main():
     parser = argparse.ArgumentParser(description='util for entering into rkt pod')
     parser.add_argument('app_name')
     parser.add_argument('--debug', action='store_true', help='enter ubuntu-debug container instead of app_name')
-    parser.add_argument('commands', nargs='*')
+    parser.add_argument('commands', nargs=argparse.REMAINDER)
 
     args = parser.parse_args()
 
