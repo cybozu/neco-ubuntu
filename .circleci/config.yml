@@ -1,12 +1,21 @@
 version: 2
 jobs:
   build:
-    docker:
-      - image: quay.io/cybozu/golang:1.10-bionic
+    machine:
+      image: circleci/classic:201708-01
     steps:
-      - run: apt-get update
-      - run: apt-get install -y --no-install-recommends python3-pip python3-setuptools
+      - run: sudo apt-get update
+      - run: sudo apt-get install -y --no-install-recommends python3-pip python3-setuptools
+      - run: pyenv global 3.5.2
       - run: pip3 install pylint pycodestyle
-
+      - run:
+          name: Install Golang
+          command: |
+            GO_VERSION="1.10.3"
+            GO_URL=https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz
+            curl $GO_URL | sudo tar -C /usr/local -x -z -f -
       - checkout
       - run: make lint
+      - run: make setup
+      - run: cp ./setup/cluster.json.example ./setup/cluster.json
+      - run: make all
