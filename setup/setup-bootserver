@@ -68,19 +68,61 @@ def systemctl(*args):
     subprocess.run(cmd, check=True)
 
 
-def setup_etcd(lrn: int, racks: [int]):
+def etcdctl(*args) -> str:
+    cmd = ["rkt", "run", "--net=host", "quay.io/cybozu/etcd:3.3", "--exec", "etcdctl", "--"]
+    cmd.extend(args)
+    return subprocess.check_output(cmd).decode('utf-8')
+
+
+def add_member(lrn: int, racks: [int]) -> dict:
+    new_host = boot_node0_ip(lrn)
+
+    endpoints_lrn = filter(lambda n: n != lrn, racks)
+    endpoints_host = map(lambda n: 'http://{!s}:2379'.format(boot_node0_ip(n)), endpoints_lrn)
+
+    passwd = getpass.getpass("root Password:")
+    raw_result = etcdctl(
+        'member', 'add', 'boot-{}'.format(lrn),
+        '--peer-urls=http://{!s}:2379'.format(new_host),
+        '--endpoints={}'.format(','.join(endpoints_host)),
+        '--user', 'root:{}'.format(passwd), '-w', 'json'
+    )
+    result_jsonf = raw_result.split(":", 1)[1]
+    result = json.loads(result_jsonf)
+
+    return result
+
+
+def format_initial_cluster(d: list, my_host: str) -> str:
+    results = []
+    for member in d:
+        host = member["name"] if "name" in member else my_host
+        s = "{}={}".format(host, ",".join(member["peerURLs"]))
+        results.append(s)
+    return ",".join(results)
+
+
+def setup_etcd(action: str, lrn: int, racks: [int]):
     node0 = boot_node0_ip(lrn)
+
+    params = {'lrn': lrn}
+    if action == 'init':
+        params['initial_advertise_peer_urls'] = 'http://{!s}:2380'.format(node0)
+        params['advertise_client_urls'] = 'http://{!s}:2379'.format(node0)
+        params['initial_cluster'] = ','.join(initial_cluster_url(n) for n in racks)
+        params['initial_cluster_state'] = 'new'
+
+    elif action == 'join':
+        result = add_member(lrn, racks)
+        params['initial_advertise_peer_urls'] = ",".join(result["member"]["peerURLs"])
+        params['advertise_client_urls'] = 'http://{!s}:2379'.format(node0)
+        params['initial_cluster'] = format_initial_cluster(result["members"], 'boot-{}'.format(lrn))
+        params['initial_cluster_state'] = 'existing'
 
     prepare_etcd_data_dir()
     with open(ETCDCONF_TMPL) as f:
         templ = string.Template(f.read())
-    data = templ.substitute(
-        lrn=lrn,
-        initial_advertise_peer_urls='http://{!s}:2380'.format(node0),
-        advertise_client_urls='http://{!s}:2379'.format(node0),
-        initial_cluster=','.join(initial_cluster_url(n) for n in racks),
-        initial_cluster_state="new",
-    )
+    data = templ.substitute(params)
     dump_file(ETCDCONF, data)
 
     shutil.copyfile("/extras/setup/etcd-container.service", "/etc/systemd/system/etcd-container.service")
@@ -159,12 +201,14 @@ password: ${password}
     print("Initialized etcdpasswd")
 
 
-def init(racks: [int], saba_passwd: str, backup_passwd: str, etcdpasswd_passwd: str):
+def init(action: str, racks: [int], saba_passwd: str, backup_passwd: str, etcdpasswd_passwd: str):
     lrn = my_lrn()
 
-    if lrn in racks:
-        setup_etcd(lrn, racks)
-        setup_etcd_backup(backup_passwd)
+    if action == 'init' and lrn not in racks:
+        raise RuntimeError('Logical rack number is not included in racks.')
+
+    setup_etcd(action, lrn, racks)
+    setup_etcd_backup(backup_passwd)
 
     setup_etcdpasswd(racks, etcdpasswd_passwd)
     setup_sabakan(lrn, racks, saba_passwd)
@@ -179,7 +223,7 @@ def main():
                    help='etcd backup user password (only for GCP env)')
     p.add_argument('--etcdpasswd-etcd-password', dest='etcdpasswd_passwd',
                    help='etcdpasswd user password (only for GCP env)')
-    p.add_argument('action', choices=['init'])
+    p.add_argument('action', choices=['init', 'join'])
     p.add_argument('racks', metavar='RACK_NUMBERS', type=int, nargs='+',
                    help='logical rack numbers where etcd should run')
 
@@ -203,8 +247,7 @@ def main():
         for lrn in ns.racks:
             if lrn < 0:
                 sys.exit('invalid rack number: {}'.format(lrn))
-        init(ns.racks, saba_passwd, backup_passwd, etcdpasswd_passwd)
-        return
+    init(ns.action, ns.racks, saba_passwd, backup_passwd, etcdpasswd_passwd)
 
 
 if __name__ == '__main__':
