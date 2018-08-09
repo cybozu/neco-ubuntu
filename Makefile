@@ -31,8 +31,7 @@ PYTHON3_DEPS:=pylint pycodestyle
 PYLINT3:=$(shell which pylint || echo $$HOME/.local/bin/pylint)
 PYCODESTYLE3:=$(shell which pycodestyle || echo $$HOME/.local/bin/pycodestyle)
 
-BUILD_DEPS:=xorriso qemu-utils qemu-kvm ovmf curl ca-certificates \
-    cloud-image-utils gdisk kpartx pylint pycodestyle
+BUILD_DEPS:=xorriso qemu-utils qemu-kvm ovmf curl ca-certificates cloud-image-utils gdisk kpartx
 CONTAINERS:=\
 	bird:2.0 \
 	ubuntu-debug:18.04 \
