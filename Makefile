@@ -21,10 +21,7 @@ RKT_DEB_NAME=rkt_1.30.0-1_amd64.deb
 RKT_DEB_URL=https://github.com/rkt/rkt/releases/download/v1.30.0/$(RKT_DEB_NAME)
 RKT_DEB_PATH=build/$(RKT_DEB_NAME)
 
-ETCDPASSWD_VERSION=0.4
-ETCDPASSWD_DEB_PATH=build/etcdpasswd_$(ETCDPASSWD_VERSION)-1_amd64.deb
-
-DEBS=$(RKT_DEB_PATH) $(ETCDPASSWD_DEB_PATH)
+DEBS=$(RKT_DEB_PATH)
 
 DOCKER2ACI_URL=https://github.com/appc/docker2aci/releases/download/v0.17.2/docker2aci-v0.17.2.tar.gz
 DOCKER2ACI=$(BUILD_DIR)/docker2aci
@@ -38,9 +35,7 @@ BUILD_DEPS:=xorriso qemu-utils qemu-kvm ovmf curl ca-certificates cloud-image-ut
 CONTAINERS:=\
 	bird:2.0 \
 	ubuntu-debug:18.04 \
-	etcd:3.3 \
-	chrony:3.3 \
-	sabakan:0
+	chrony:3.3
 
 ACI_FILES=$(patsubst %,build/cybozu-%.aci,$(subst :,-,$(CONTAINERS)))
 ARTIFACTS=$(ORIGINAL_ISO_PATH) $(ORIGINAL_CLOUD_PATH) $(RKT_DEB_PATH) $(DOCKER2ACI)
@@ -76,9 +71,6 @@ $(ORIGINAL_CLOUD_PATH):
 
 $(RKT_DEB_PATH):
 	$(CURL) -o $@ $(RKT_DEB_URL)
-
-$(ETCDPASSWD_DEB_PATH):
-	$(CURL) -o $@ https://github.com/cybozu-go/etcdpasswd/releases/download/v$(ETCDPASSWD_VERSION)/$(notdir $@)
 
 $(DOCKER2ACI):
 	cd $(BUILD_DIR); $(CURL) $(DOCKER2ACI_URL) | tar -x -z -f - --strip-components=1
@@ -144,7 +136,6 @@ lint:
 clean:
 	rm -rf $(CUSTOM_ISO_PATH) \
 		$(CUSTOM_CLOUD_PATH) \
-		$(ETCDPASSWD_DEB_PATH) \
 		$(SRC_DIR_PATH) $(PREVIEW_IMG) $(LOCALDS_IMG)
 
 fullclean: clean
