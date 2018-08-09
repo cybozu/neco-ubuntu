@@ -31,7 +31,8 @@ PYTHON3_DEPS:=pylint pycodestyle
 PYLINT3:=$(shell which pylint || echo $$HOME/.local/bin/pylint)
 PYCODESTYLE3:=$(shell which pycodestyle || echo $$HOME/.local/bin/pycodestyle)
 
-BUILD_DEPS:=xorriso qemu-utils qemu-kvm ovmf curl ca-certificates cloud-image-utils gdisk kpartx python3-pip python3-setuptools
+BUILD_DEPS:=xorriso qemu-utils qemu-kvm ovmf curl ca-certificates \
+    cloud-image-utils gdisk kpartx pylint pycodestyle
 CONTAINERS:=\
 	bird:2.0 \
 	ubuntu-debug:18.04 \
@@ -143,8 +144,5 @@ fullclean: clean
 
 setup:
 	sudo apt-get -y install --no-install-recommends $(BUILD_DEPS)
-	# wheel is required to install pylint for some distributions
-	pip3 install wheel
-	pip3 install $(PYTHON3_DEPS)
 
 .PHONY: help all iso cloud preview-iso preview-cloud lint clean fullclean setup
