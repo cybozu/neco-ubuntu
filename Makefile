@@ -27,9 +27,9 @@ DOCKER2ACI_URL=https://github.com/appc/docker2aci/releases/download/v0.17.2/dock
 DOCKER2ACI=$(BUILD_DIR)/docker2aci
 
 PYTHON3_FILES=$(shell find setup/ -type f | xargs awk '/python3/ {print FILENAME} {nextfile}')
-PYTHON3_DEPS:=pylint pycodestyle
-PYLINT3:=$(shell which pylint || echo $$HOME/.local/bin/pylint)
-PYCODESTYLE3:=$(shell which pycodestyle || echo $$HOME/.local/bin/pycodestyle)
+PYTHON3_DEPS:=pylint3 pycodestyle
+PYLINT3=pylint
+PYCODESTYLE3=pycodestyle
 
 BUILD_DEPS:=xorriso qemu-utils qemu-kvm ovmf curl ca-certificates cloud-image-utils gdisk kpartx
 CONTAINERS:=\
