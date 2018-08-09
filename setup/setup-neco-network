@@ -234,7 +234,16 @@ def enable_networkd():
     print("purged netplan, enabled systemd-networkd")
 
 
-def configure(rack: int, c: Cluster):
+def configure_dns(servers: [str]):
+    os.unlink('/etc/resolv.conf')
+    with open('/etc/resolv.conf', 'w') as f:
+        for a in servers:
+            print('nameserver', a, file=f, flush=True)
+        f.flush()
+        os.fsync(f.fileno())
+
+
+def configure(rack: int, dns_servers: [str], c: Cluster):
     node0, node1, node2 = node_addresses(rack)
     tor1 = ipaddress.IPv4Network((node1, NODE_MASK), strict=False).network_address + 1
     tor2 = ipaddress.IPv4Network((node2, NODE_MASK), strict=False).network_address + 1
@@ -249,6 +258,8 @@ def configure(rack: int, c: Cluster):
     wait_devs(ETH0, ETH1, "bastion")
     print("configured network devices")
 
+    if dns_servers is not None:
+        configure_dns(dns_servers)
     configure_default_route(tor1, tor2, bastion)
     configure_bird(BASE_ASN + rack, tor1, tor2)
     configure_chrony(c)
@@ -259,6 +270,8 @@ def configure(rack: int, c: Cluster):
 
 def main():
     parser = argparse.ArgumentParser(description='Setup network script')
+    parser.add_argument('--dns', dest='dns_servers', metavar='IP', action='append',
+                        help='dns server address')
     parser.add_argument('-c', '--cluster', help='cluster name')
     parser.add_argument('rack', type=int, help='rack number')
 
@@ -273,7 +286,7 @@ def main():
     clusters = load_clusters('cluster.json')
     c = ask_cluster(clusters, args.cluster)
 
-    configure(rack, c)
+    configure(rack, args.dns_servers, c)
 
 
 if __name__ == '__main__':
