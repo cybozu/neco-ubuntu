@@ -1,6 +1,0 @@
-advertise-url: ${advertise_url}
-dhcp-bind: 0.0.0.0:67
-etcd:
-  endpoints: ${etcd_servers}
-  username: sabakan
-  password: ${etcd_password}
