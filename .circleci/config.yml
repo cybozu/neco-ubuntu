@@ -5,8 +5,9 @@ jobs:
       - image: quay.io/cybozu/ubuntu:18.04
     steps:
     - run: apt-get update
-    - run: apt-get install -y --no-install-recommends make pylint pycodestyle
+    - run: apt-get install -y --no-install-recommends make pylint3 pycodestyle
     - checkout
+    - run: alias pylint=pylint3
     - run: make lint
   build:
     machine:
