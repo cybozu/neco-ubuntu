@@ -17,6 +17,18 @@ jobs:
       - run: make setup
       - run: cp ./setup/cluster.json.example ./setup/cluster.json
       - run: make cloud iso
+      - persist_to_workspace:
+          root: build
+          paths:
+            - cybozu-ubuntu-18.04.1-server-amd64.iso
+            - cybozu-ubuntu-18.04-server-cloudimg-amd64.img
+  release:
+    docker:
+      - image: quay.io/cybozu/golang:1.10-bionic
+    steps:
+      - attach_workspace:
+          at: ./artifacts
+      - run: ghr -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} ${CIRCLE_TAG} ./artifacts/
 
 workflows:
   version: 2
@@ -24,3 +36,14 @@ workflows:
     jobs:
       - lint
       - build
+  release:
+    jobs:
+      - release:
+          requires:
+            - lint
+            - build
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
