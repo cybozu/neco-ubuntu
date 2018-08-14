@@ -38,6 +38,18 @@ workflows:
       - build
   release:
     jobs:
+      - lint:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+      - build:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
       - release:
           requires:
             - lint
