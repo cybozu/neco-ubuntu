@@ -207,6 +207,8 @@ def configure_bird(asn: int, tor1: ipaddress.IPv4Address, tor2: ipaddress.IPv4Ad
 
 
 def configure_chrony(c: Cluster):
+    systemctl('--now', 'mask', 'systemd-timesyncd.service')
+
     with open("/extras/setup/chrony.conf.template", "r") as f:
         tmpl = string.Template(f.read())
 
