@@ -48,7 +48,10 @@ Bump version
 Publish GitHub release page
 ---------------------------
 
-Go to https://github.com/cybozu-go/neco-ubuntu/releases and edit the tag.
-Finally, press `Publish release` button.
+Once a new tag is pushed to GitHub, [CircleCI][] automatically
+builds custom images, and uploads it to GitHub releases page.
+
+Visit https://github.com/cybozu/neco-ubuntu/releases to check
+the result.  You may manually edit the page to describe the release.
 
 [example]: https://github.com/cybozu-go/etcdpasswd/commit/77d95384ac6c97e7f48281eaf23cb94f68867f79
