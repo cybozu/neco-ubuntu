@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [20180906]
+
+### Changed
+- Rebuild image with latest container images.
+
 ## [20180817]
 
 ### Changed
@@ -14,5 +19,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - First release of neco-ubuntu images (#31).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/20180817...HEAD
-[20180817]: https://github.com/cybozu-go/sabakan/compare/20180814...20180817
+[Unreleased]: https://github.com/cybozu/neco-ubuntu/compare/20180906...HEAD
+[20180906]: https://github.com/cybozu/neco-ubuntu/compare/20180817...20180906
+[20180817]: https://github.com/cybozu/neco-ubuntu/compare/20180814...20180817
+[20180814]: https://github.com/cybozu/neco-ubuntu/compare/946c82a...20180814
