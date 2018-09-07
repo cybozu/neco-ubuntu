@@ -20,6 +20,11 @@ d-i netcfg/enable boolean false
 # change to false to disable asking.
 d-i hw-detect/load_firmware boolean true
 
+d-i mirror/country string US
+d-i mirror/http/hostname string archive.ubuntu.com
+d-i mirror/http/directory string /ubuntu
+d-i mirror/http/proxy string
+
 # To create a normal user account.
 d-i passwd/user-fullname string cybozu
 d-i passwd/username string cybozu
@@ -70,7 +75,7 @@ d-i apt-setup/restricted boolean false
 d-i apt-setup/universe boolean true
 d-i apt-setup/backports boolean false
 # Uncomment this if you don't want to use a network mirror.
-d-i apt-setup/use_mirror boolean false
+#d-i apt-setup/use_mirror boolean false
 
 ### Package selection
 tasksel tasksel/first multiselect server openssh-server
@@ -109,7 +114,8 @@ d-i finish-install/reboot_in_progress note
 
 d-i preseed/late_command string \
        mkdir -p /target/extras; \
-       cp -a /cdrom/pool/extras/* /target/extras/;
+       cp -a /cdrom/pool/extras/* /target/extras/; \
+       sed -i -e 's,http://us\.archive,http://archive,' /target/etc/apt/sources.list;
 
 #### ORIGINAL CONTENTS
 

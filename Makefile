@@ -37,6 +37,7 @@ CONTAINERS:=\
 	ubuntu-debug:18.04 \
 	chrony:3.3
 
+PATCH_FILES=$(shell find $(PATCH_DIR) -type f)
 ACI_FILES=$(patsubst %,build/cybozu-%.aci,$(subst :,-,$(CONTAINERS)))
 ARTIFACTS=$(ORIGINAL_ISO_PATH) $(ORIGINAL_CLOUD_PATH) $(RKT_DEB_PATH) $(DOCKER2ACI)
 PREVIEW_IMG=$(BUILD_DIR)/ubuntu.img
@@ -79,7 +80,7 @@ $(DOCKER2ACI):
 	cd $(BUILD_DIR); ./docker2aci $$(echo $@ | sed -r 's,build/cybozu-(.*)-([^-]+).aci,docker://quay.io/cybozu/\1:\2,')
 	chmod 644 $@
 
-$(CUSTOM_ISO_PATH): $(ORIGINAL_ISO_PATH) $(DEBS) $(ACI_FILES) $(CLUSTER_JSON)
+$(CUSTOM_ISO_PATH): $(ORIGINAL_ISO_PATH) $(DEBS) $(ACI_FILES) $(CLUSTER_JSON) $(PATCH_FILES)
 	rm -rf $(SRC_DIR_PATH)
 	mkdir -p $(SRC_DIR_PATH)
 	xorriso -osirrox on -indev $(ORIGINAL_ISO_PATH) \
