@@ -181,7 +181,7 @@ ExecStart=/sbin/ethtool -K {} tx off rx off
 RemainAfterExit=yes
 
 [Install]
-WantedBy=network-online.target
+WantedBy=multi-user.target
 """.format(ETH0, ETH1)
 
     write_file("/etc/systemd/system/disable-offload.service", content)
