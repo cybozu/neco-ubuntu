@@ -166,6 +166,32 @@ Scope=link
     write_file("/etc/systemd/network/10-{}.network".format(name), content)
 
 
+def configure_disable_offload():
+    content = """\
+[Unit]
+Description=Disable network device offload
+Wants=network-online.target
+After=network-online.target
+ConditionVirtualization=!kvm
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/ethtool -K {} tx off rx off
+ExecStart=/sbin/ethtool -K {} tx off rx off
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+""".format(ETH0, ETH1)
+
+    write_file("/etc/systemd/system/disable-offload.service", content)
+
+    systemctl("daemon-reload")
+    systemctl("enable", "disable-offload.service")
+    systemctl("start", "disable-offload.service")
+    print("configured disable offload")
+
+
 def configure_default_route(tor1: ipaddress.IPv4Address,
                             tor2: ipaddress.IPv4Address,
                             bastion: ipaddress.IPv4Address):
@@ -260,6 +286,7 @@ def configure(rack: int, dns_servers: [str], c: Cluster):
     wait_devs(ETH0, ETH1, "bastion")
     print("configured network devices")
 
+    configure_disable_offload()
     if dns_servers is not None:
         configure_dns(dns_servers)
     configure_default_route(tor1, tor2, bastion)
