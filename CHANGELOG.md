@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [20180926]
+
+### Changed
+- Ensure time synchronized (#35).
+
 ## [20180919]
 
 ### Added
