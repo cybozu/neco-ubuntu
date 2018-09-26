@@ -13,4 +13,10 @@ while true; do
     sleep 1
 done
 
-exec rkt enter --app=chrony $uuid chronyc waitsync 600 0.1 0.0 1
+for i in $(seq 600); do
+  rkt enter --app=chrony $uuid chronyc waitsync 1 0.1 0.0 1 && exit 0
+  sleep 1
+done
+
+echo >&2 "Timed-out to synchronize NTP to upstream servers"
+exit 1
