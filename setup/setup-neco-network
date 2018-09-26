@@ -239,7 +239,8 @@ def configure_chrony(c: Cluster):
         tmpl = string.Template(f.read())
 
     servers = '\n'.join('server {} iburst'.format(ip) for ip in c.ntp_servers)
-    content = tmpl.substitute(ntp_servers=servers)
+    initstepslew = 'initstepslew 0.1 ' + ' '.join(c.ntp_servers)
+    content = tmpl.substitute(ntp_servers=servers, initstepslew=initstepslew)
     write_file("/etc/chrony.conf", content)
 
     shutil.copyfile("/extras/setup/chrony-wait", "/usr/local/bin/chrony-wait")
