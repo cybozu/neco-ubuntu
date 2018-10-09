@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [20181009]
+
+### Added
+- Add serf ACI file (#36).
+
 ## [20180926]
 
 ### Changed
@@ -29,7 +34,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 - First release of neco-ubuntu images (#31).
 
-[Unreleased]: https://github.com/cybozu/neco-ubuntu/compare/20180906...HEAD
+[Unreleased]: https://github.com/cybozu/neco-ubuntu/compare/20181009...HEAD
+[20181009]: https://github.com/cybozu/neco-ubuntu/compare/20180919...20181009
 [20180919]: https://github.com/cybozu/neco-ubuntu/compare/20180906...20180919
 [20180906]: https://github.com/cybozu/neco-ubuntu/compare/20180817...20180906
 [20180817]: https://github.com/cybozu/neco-ubuntu/compare/20180814...20180817
