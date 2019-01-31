@@ -35,8 +35,7 @@ BUILD_DEPS:=xorriso qemu-utils qemu-kvm ovmf curl ca-certificates cloud-image-ut
 CONTAINERS:=\
 	bird:2.0 \
 	ubuntu-debug:18.04 \
-	chrony:3.3 \
-	serf:0.8
+	chrony:3.3
 
 PATCH_FILES=$(shell find $(PATCH_DIR) -type f)
 ACI_FILES=$(patsubst %,build/cybozu-%.aci,$(subst :,-,$(CONTAINERS)))
