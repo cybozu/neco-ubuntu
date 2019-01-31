@@ -15,35 +15,43 @@ NODE_MASK = 26
 
 RACK_INFORMATION = '/etc/neco/rack'
 CLUSTER_INFORMATION = '/etc/neco/cluster'
+SABAKAN_IPAM = '/etc/neco/sabakan_ipam.json'
 
-VM = subprocess.run(['systemd-detect-virt', '-v'], stdout=subprocess.DEVNULL).returncode == 0
+VM = subprocess.run(['systemd-detect-virt', '-v'],
+                    stdout=subprocess.DEVNULL).returncode == 0
 ETH0 = 'ens3' if VM else 'eno1'
 ETH1 = 'ens4' if VM else 'eno2'
 
 
 class Cluster:
     # pylint: disable=too-many-arguments
-    def __init__(self, name: str, bastion_network: str, ntp_servers: [str]):
+    def __init__(self, name: str, bastion_network: str, bmc_network: str,
+                 ntp_servers: [str]):
         self._name = name
         self._bastion_network = ipaddress.IPv4Address(bastion_network)
         if not isinstance(ntp_servers, list):
             raise TypeError('ntp_servers must be a list')
         self._ntp_servers = ntp_servers
+        self._bmc_network = ipaddress.IPv4Network(bmc_network)
 
     @property
-    def name(self) ->str:
+    def name(self) -> str:
         return self._name
 
     @property
-    def bastion_network(self) ->ipaddress.IPv4Address:
+    def bastion_network(self) -> ipaddress.IPv4Address:
         return self._bastion_network
 
     @property
-    def ntp_servers(self) ->[str]:
+    def bmc_network(self) -> ipaddress.IPv4Network:
+        return self._bmc_network
+
+    @property
+    def ntp_servers(self) -> [str]:
         return self._ntp_servers
 
 
-def load_clusters(filename: str) ->[Cluster]:
+def load_clusters(filename: str) -> [Cluster]:
     with open(filename) as f:
         j = json.load(f)
     if not isinstance(j, list):
@@ -56,14 +64,14 @@ def ask_cluster(clusters: [Cluster], name: str) -> Cluster:
         for c in clusters:
             if c.name == name:
                 return c
-        raise RuntimeError('no such cluster: '+name)
+        raise RuntimeError('no such cluster: ' + name)
 
     if len(clusters) == 1:
         return clusters[0]
 
     print('Choose the cluster of this server.\n')
     for i, c in enumerate(clusters):
-        print('{}) {}'.format(i+1, c.name))
+        print('{}) {}'.format(i + 1, c.name))
 
     while True:
         answer = input("Input a number [1-{}]: ".format(len(clusters)))
@@ -75,7 +83,7 @@ def ask_cluster(clusters: [Cluster], name: str) -> Cluster:
         if 1 <= n <= len(clusters):
             break
 
-    return clusters[n-1]
+    return clusters[n - 1]
 
 
 def dump_rack_information(rack: int):
@@ -86,6 +94,24 @@ def dump_rack_information(rack: int):
 def dump_cluster_information(c: Cluster):
     os.makedirs('/etc/neco', 0o755, exist_ok=True)
     write_file(CLUSTER_INFORMATION, c.name + "\n")
+
+
+def dump_sabakan_ipam(bmc_network: ipaddress.IPv4Network):
+    ipam = {
+        "max-nodes-in-rack": 28,
+        "node-ipv4-pool": "10.69.0.0/20",
+        "node-ipv4-range-size": 6,
+        "node-ipv4-range-mask": 26,
+        "node-index-offset": 3,
+        "node-ip-per-node": 3,
+        "bmc-ipv4-pool": str(bmc_network),
+        "bmc-ipv4-offset": "0.0.1.0",
+        "bmc-ipv4-range-size": 5,
+        "bmc-ipv4-range-mask": bmc_network.prefixlen,
+        "bmc-ipv4-gateway-offset": 1,
+    }
+    os.makedirs('/etc/neco', 0o755, exist_ok=True)
+    write_file(SABAKAN_IPAM, json.dumps(ipam))
 
 
 def systemctl(*args):
@@ -115,7 +141,9 @@ def wait_devs(*devs):
     wants = set(devs)
 
     while True:
-        ret = subprocess.run(["ip", "-o", "address"], stdout=subprocess.PIPE, check=True)
+        ret = subprocess.run(["ip", "-o", "address"],
+                             stdout=subprocess.PIPE,
+                             check=True)
         readies = set()
         for line in ret.stdout.decode('utf-8').split('\n'):
             cols = line.split()
@@ -145,8 +173,10 @@ Name={}
 Address={}/32
 """.format(name, addr)
 
-    write_file("/etc/systemd/network/10-{}.netdev".format(name), netdev_content)
-    write_file("/etc/systemd/network/10-{}.network".format(name), network_content)
+    write_file("/etc/systemd/network/10-{}.netdev".format(name),
+               netdev_content)
+    write_file("/etc/systemd/network/10-{}.network".format(name),
+               network_content)
 
 
 def write_link_networkd(name: str, addr: ipaddress.IPv4Address):
@@ -217,15 +247,18 @@ WantedBy=multi-user.target
     print("configured default gateway")
 
 
-def configure_bird(asn: int, tor1: ipaddress.IPv4Address, tor2: ipaddress.IPv4Address):
+def configure_bird(asn: int, tor1: ipaddress.IPv4Address,
+                   tor2: ipaddress.IPv4Address):
     with open("/extras/setup/bird.conf.template", "r") as f:
         tmpl = string.Template(f.read())
 
-    content = tmpl.substitute(ASN=asn, TOR1=str(tor1), TOR2=str(tor2), MASK=NODE_MASK)
+    content = tmpl.substitute(
+        ASN=asn, TOR1=str(tor1), TOR2=str(tor2), MASK=NODE_MASK)
     os.makedirs("/etc/bird", mode=0o755, exist_ok=True)
     write_file("/etc/bird/bird.conf", content)
 
-    shutil.copyfile("/extras/setup/bird.service", "/etc/systemd/system/bird.service")
+    shutil.copyfile("/extras/setup/bird.service",
+                    "/etc/systemd/system/bird.service")
     systemctl("daemon-reload")
     systemctl("enable", "bird.service")
     systemctl("start", "bird.service")
@@ -245,8 +278,10 @@ def configure_chrony(c: Cluster):
 
     shutil.copyfile("/extras/setup/chrony-wait", "/usr/local/bin/chrony-wait")
     os.chmod("/usr/local/bin/chrony-wait", 0o755)
-    shutil.copyfile("/extras/setup/chrony-wait.service", "/etc/systemd/system/chrony-wait.service")
-    shutil.copyfile("/extras/setup/chronyd.service", "/etc/systemd/system/chronyd.service")
+    shutil.copyfile("/extras/setup/chrony-wait.service",
+                    "/etc/systemd/system/chrony-wait.service")
+    shutil.copyfile("/extras/setup/chronyd.service",
+                    "/etc/systemd/system/chronyd.service")
 
     systemctl("daemon-reload")
     systemctl("enable", "chrony-wait.service")
@@ -274,8 +309,10 @@ def configure_dns(servers: [str]):
 
 def configure(rack: int, dns_servers: [str], c: Cluster):
     node0, node1, node2 = node_addresses(rack)
-    tor1 = ipaddress.IPv4Network((node1, NODE_MASK), strict=False).network_address + 1
-    tor2 = ipaddress.IPv4Network((node2, NODE_MASK), strict=False).network_address + 1
+    tor1 = ipaddress.IPv4Network(
+        (node1, NODE_MASK), strict=False).network_address + 1
+    tor2 = ipaddress.IPv4Network(
+        (node2, NODE_MASK), strict=False).network_address + 1
     bastion = bastion_address(rack, c)
 
     write_dummy_networkd("node0", node0)
@@ -296,12 +333,17 @@ def configure(rack: int, dns_servers: [str], c: Cluster):
 
     dump_rack_information(rack)
     dump_cluster_information(c)
+    dump_sabakan_ipam(c.bmc_network)
 
 
 def main():
     parser = argparse.ArgumentParser(description='Setup network script')
-    parser.add_argument('--dns', dest='dns_servers', metavar='IP', action='append',
-                        help='dns server address')
+    parser.add_argument(
+        '--dns',
+        dest='dns_servers',
+        metavar='IP',
+        action='append',
+        help='dns server address')
     parser.add_argument('-c', '--cluster', help='cluster name')
     parser.add_argument('rack', type=int, help='rack number')
 

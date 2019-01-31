@@ -18,11 +18,12 @@ Build
 
     The contents should be a JSON array of objects with these fields:
 
-    Name              | Type   | Description
-    ----------------- | ------ | -----------
-    `name`            | string | Cluster name
-    `bastion_network` | string | IPv4 address of the bastion network
-    `ntp_servers`     | array  | List of NTP server addresses
+    | Name              | Type   | Description                              |
+    | ----------------- | ------ | ---------------------------------------- |
+    | `name`            | string | Cluster name                             |
+    | `bastion_network` | string | IPv4 address of the bastion network      |
+    | `bmc_network`     | CIDR   | IPv4 network address in CIDR for the BMC |
+    | `ntp_servers`     | array  | List of NTP server addresses             |
 
     This file will be read by `setup-neco-network`.
     An example of the file is available at `setup/cluster.json.example`.
@@ -81,6 +82,7 @@ After setup, the system is configured as follows.
 * Running `rkt` containers as systemd services.  Use `sudo rkt list` to get the list of them.
 * The rack number of the server is stored in `/etc/neco/rack` file.
 * The cluster ID of the server is stored in `/etc/neco/cluster` file.
+* The IPAM configuration for sabakan is stored in `/etc/neco/sabakan_ipam.json` file.
 
 License
 -------
