@@ -104,6 +104,7 @@ def dump_sabakan_ipam(bmc_network: ipaddress.IPv4Network):
         "node-ipv4-range-mask": 26,
         "node-index-offset": 3,
         "node-ip-per-node": 3,
+        "node-gateway-offset": 1,
         "bmc-ipv4-pool": str(bmc_network),
         "bmc-ipv4-offset": "0.0.1.0",
         "bmc-ipv4-range-size": 5,
