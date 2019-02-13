@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [20190213]
+
+### Changed
+- add "node-gateway-offset" field to sabakan_ipam.json (#38).
+
 ## [20190131]
 
 ### Added
@@ -50,7 +55,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 - First release of neco-ubuntu images (#31).
 
-[Unreleased]: https://github.com/cybozu/neco-ubuntu/compare/20190131...HEAD
+[Unreleased]: https://github.com/cybozu/neco-ubuntu/compare/20190213...HEAD
+[20190213]: https://github.com/cybozu/neco-ubuntu/compare/20190131...20190213
 [20190131]: https://github.com/cybozu/neco-ubuntu/compare/20181010...20190131
 [20181010]: https://github.com/cybozu/neco-ubuntu/compare/20181009...20181010
 [20181009]: https://github.com/cybozu/neco-ubuntu/compare/20180919...20181009
