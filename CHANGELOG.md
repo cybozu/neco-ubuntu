@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [20190312]
+
+### Changed
+- Use internal ntp address by default (#39).
+
 ## [20190213]
 
 ### Changed
@@ -55,7 +60,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 - First release of neco-ubuntu images (#31).
 
-[Unreleased]: https://github.com/cybozu/neco-ubuntu/compare/20190213...HEAD
+[Unreleased]: https://github.com/cybozu/neco-ubuntu/compare/20190312...HEAD
+[20190312]: https://github.com/cybozu/neco-ubuntu/compare/20190213...20190312
 [20190213]: https://github.com/cybozu/neco-ubuntu/compare/20190131...20190213
 [20190131]: https://github.com/cybozu/neco-ubuntu/compare/20181010...20190131
 [20181010]: https://github.com/cybozu/neco-ubuntu/compare/20181009...20181010
