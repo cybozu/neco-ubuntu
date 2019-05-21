@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [20190521]
+
+Rebuild cloud image in the latest version
+
 ## [20190312]
 
 ### Changed
@@ -60,7 +64,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 - First release of neco-ubuntu images (#31).
 
-[Unreleased]: https://github.com/cybozu/neco-ubuntu/compare/20190312...HEAD
+[Unreleased]: https://github.com/cybozu/neco-ubuntu/compare/20190521...HEAD
+[20190521]: https://github.com/cybozu/neco-ubuntu/compare/20190312...20190521
 [20190312]: https://github.com/cybozu/neco-ubuntu/compare/20190213...20190312
 [20190213]: https://github.com/cybozu/neco-ubuntu/compare/20190131...20190213
 [20190131]: https://github.com/cybozu/neco-ubuntu/compare/20181010...20190131
