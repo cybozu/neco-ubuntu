@@ -119,5 +119,10 @@ d-i preseed/late_command string \
 
 #### ORIGINAL CONTENTS
 
+# Purge packages
+apt-get -y purge --auto-remove apport \
+    unattended-upgrades software-properties-common \
+    python3-software-properties ntpdate
+
 # Wait for two seconds in grub
 d-i	grub-installer/timeout	string 2
