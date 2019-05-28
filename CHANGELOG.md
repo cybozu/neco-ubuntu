@@ -4,9 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [20190528]
+
+### Changed
+- Purge unattended-upgrades (#41).
+
 ## [20190521]
 
-Rebuild cloud image in the latest version
+### Changed
+- Rebuild cloud image in the latest version
 
 ## [20190312]
 
@@ -64,7 +70,8 @@ Rebuild cloud image in the latest version
 ### Added
 - First release of neco-ubuntu images (#31).
 
-[Unreleased]: https://github.com/cybozu/neco-ubuntu/compare/20190521...HEAD
+[Unreleased]: https://github.com/cybozu/neco-ubuntu/compare/20190528...HEAD
+[20190528]: https://github.com/cybozu/neco-ubuntu/compare/20190521...20190528
 [20190521]: https://github.com/cybozu/neco-ubuntu/compare/20190312...20190521
 [20190312]: https://github.com/cybozu/neco-ubuntu/compare/20190213...20190312
 [20190213]: https://github.com/cybozu/neco-ubuntu/compare/20190131...20190213
