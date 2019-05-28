@@ -118,7 +118,7 @@ d-i preseed/late_command string \
        sed -i -e 's,http://us\.archive,http://archive,' /target/etc/apt/sources.list; \
        in-target apt-get -y purge --auto-remove apport \
          unattended-upgrades software-properties-common \
-         python3-software-properties ntpdate;
+         python3-software-properties;
 
 #### ORIGINAL CONTENTS
 
