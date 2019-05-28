@@ -115,7 +115,10 @@ d-i finish-install/reboot_in_progress note
 d-i preseed/late_command string \
        mkdir -p /target/extras; \
        cp -a /cdrom/pool/extras/* /target/extras/; \
-       sed -i -e 's,http://us\.archive,http://archive,' /target/etc/apt/sources.list;
+       sed -i -e 's,http://us\.archive,http://archive,' /target/etc/apt/sources.list; \
+       in-target apt-get -y purge --auto-remove apport \
+         unattended-upgrades software-properties-common \
+         python3-software-properties;
 
 #### ORIGINAL CONTENTS
 
