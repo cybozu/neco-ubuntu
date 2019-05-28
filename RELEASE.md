@@ -48,7 +48,7 @@ Bump version
 Publish GitHub release page
 ---------------------------
 
-Once a new tag is pushed to GitHub, [CircleCI][] automatically
+Once a new tag is pushed to GitHub, [CircleCI](https://circleci.com/gh/cybozu/neco-ubuntu) automatically
 builds custom images, and uploads it to GitHub releases page.
 
 Visit https://github.com/cybozu/neco-ubuntu/releases to check
