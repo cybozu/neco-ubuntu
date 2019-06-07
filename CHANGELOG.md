@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [20190607]
+
+### Changed
+- Adjust makestep offset for chrony to 0.1 seconds (#45).
+
 ## [20190528]
 
 ### Changed
@@ -70,7 +75,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 - First release of neco-ubuntu images (#31).
 
-[Unreleased]: https://github.com/cybozu/neco-ubuntu/compare/20190528...HEAD
+[Unreleased]: https://github.com/cybozu/neco-ubuntu/compare/20190607...HEAD
+[20190607]: https://github.com/cybozu/neco-ubuntu/compare/20190528...20190607
 [20190528]: https://github.com/cybozu/neco-ubuntu/compare/20190521...20190528
 [20190521]: https://github.com/cybozu/neco-ubuntu/compare/20190312...20190521
 [20190312]: https://github.com/cybozu/neco-ubuntu/compare/20190213...20190312
