@@ -112,7 +112,7 @@ $(CUSTOM_ISO_PATH): $(ORIGINAL_ISO_PATH) $(DEBS) $(ACI_FILES) $(CLUSTER_JSON) $(
 preview-iso: $(CUSTOM_ISO_PATH)
 	rm -f $(PREVIEW_IMG)
 	qemu-img create -f qcow2 $(PREVIEW_IMG) 10G
-	sudo kvm -m 2G \
+	kvm -m 2G \
 		-bios /usr/share/ovmf/OVMF.fd \
 		-drive file=$(PREVIEW_IMG) \
 		-drive file=$(CUSTOM_ISO_PATH),media=cdrom
@@ -126,7 +126,7 @@ preview-cloud: $(CUSTOM_CLOUD_PATH)
 	rm -f $(PREVIEW_IMG) $(LOCALDS_IMG)
 	cloud-localds $(LOCALDS_IMG) cybozu.seed
 	cp $(CUSTOM_CLOUD_PATH) $(PREVIEW_IMG)
-	sudo kvm -m 2G -net nic -net nic \
+	kvm -m 2G -net nic -net nic \
 		-drive file=$(PREVIEW_IMG) \
 		-drive file=$(LOCALDS_IMG),format=raw
 
