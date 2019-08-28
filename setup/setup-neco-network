@@ -235,6 +235,7 @@ After=network-online.target
 Type=oneshot
 ExecStart=/bin/ip route add 0.0.0.0/0 src {} nexthop via {} nexthop via {}
 RemainAfterExit=yes
+FailureAction=reboot-immediate
 
 [Install]
 WantedBy=multi-user.target
