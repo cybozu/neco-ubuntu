@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [20190829]
+
+### Changed
+- [setup-route] Reboot when setup-route.service is failed (#47).
+
 ## [20190607]
 
 ### Changed
@@ -75,7 +80,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 - First release of neco-ubuntu images (#31).
 
-[Unreleased]: https://github.com/cybozu/neco-ubuntu/compare/20190607...HEAD
+[Unreleased]: https://github.com/cybozu/neco-ubuntu/compare/20190829...HEAD
+[20190829]: https://github.com/cybozu/neco-ubuntu/compare/20190607...20190829
 [20190607]: https://github.com/cybozu/neco-ubuntu/compare/20190528...20190607
 [20190528]: https://github.com/cybozu/neco-ubuntu/compare/20190521...20190528
 [20190521]: https://github.com/cybozu/neco-ubuntu/compare/20190312...20190521
