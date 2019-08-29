@@ -34,15 +34,28 @@ Bump version
 ------------
 
 1. Determine a new version number.  Let it write `$VERSION`.
-2. Checkout `master` branch.
-3. Edit `CHANGELOG.md` for the new version ([example][]).
-4. Commit the change and add a git tag, then push them.
 
     ```console
     $ VERSION=$(date +"%Y%m%d")
+    ```
+
+2. Checkout `master` branch.
+3. Make a branch to release, for example by `git neco dev "$VERSION"`
+4. Edit `CHANGELOG.md` for the new version ([example][]).
+5. Commit the change and push it.
+
+    ```console
     $ git commit -a -m "Bump version to $VERSION"
-    $ git tag $VERSION
-    $ git push origin master --tags
+    $ git neco review
+    ```
+
+6. Merge this branch.
+7. Checkout `master` branch.
+8. Add a git tag, then push it.
+
+    ```console
+    $ git tag "$VERSION"
+    $ git push origin "$VERSION"
     ```
 
 Publish GitHub release page
